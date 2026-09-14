@@ -51,6 +51,7 @@ window.TRScene = (function () {
   let ambLight = null, dirLight = null;   // 灯光（昼夜切换调强度）
   let skyStars = null, skyNeb = null;     // 深空星幕/银河（白天隐藏）
   const _rvec = new THREE.Vector3(), _uvec = new THREE.Vector3();  // 平移用临时向量
+  const _camPos = new THREE.Vector3();      // LOD 距离计算缓存
   const _v3 = new THREE.Vector3();            // 标签投影用临时向量
   let mmCanvas = null, mmCtx = null;          // 小地图离屏画布
   let mmScale = 1, mmOX = 0, mmOZ = 0, mmW = 340, mmH = 236;
@@ -1383,8 +1384,15 @@ window.TRScene = (function () {
         flowPts.geometry.attributes.position.needsUpdate = true;
       }
 
-      /* 河灯起伏 + 灯焰闪烁 */
+      /* 🔍 LOD 分级显示：按相机距离 + 重要性决定河灯可见性 */
       lanterns.forEach(function (m) {
+        if (!m.group.visible) return;
+        const dist = camPos.distanceTo(m.group.position);
+        if (dist > 550) {
+          m.group.visible = m.ev.imp >= 3;
+        } else if (dist > 300) {
+          m.group.visible = m.ev.imp >= 2;
+        }
         if (!m.group.visible) return;
         m.group.position.y = waterYAt(m.p) + 1.4 + Math.sin(now / 900 + m.phase) * 0.9;
         const baseOp = state.dayMode ? 0.42 : 0.7;
