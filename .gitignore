@@ -14,3 +14,4 @@ node_modules/
 # 临时截图（正式预览图 docs/river-*.jpg 与 design-mockup 保留）
 test-shot-*.jpg
 test-shot-*.png
+js/*.bak
