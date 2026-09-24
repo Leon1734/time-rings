@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>设计简图 · 滚滚长河 v2</title>
+<style>
+  html,body{margin:0;height:100%;background:#02040a;overflow:hidden}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  canvas{max-width:100vw;max-height:100vh;box-shadow:0 0 70px rgba(90,130,255,.14)}
+  #note{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);color:#6b7688;font:12px/1 "Microsoft YaHei";letter-spacing:2px}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv" width="1600" height="900"></canvas></div>
+<div id="note">设 计 简 图 · 布局与风格示意（非最终渲染）—— 确认后开发</div>
+<script>
+'use strict';
+(function(){
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = 1600, H = 900;
+
+function mulberry32(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hexA(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return 'rgba('+r+','+g+','+b+','+a+')';}
+
+/* ================= 河道中心线（蜿蜒向右，永不回头） ================= */
+const P=[[-90,230],[280,150],[520,400],[430,660],[760,760],[1000,520],[1180,300],[1460,560],[1720,650]];
+function catmull(t){
+  const n=P.length-1, f=Math.min(0.9999,Math.max(0,t))*n, i=Math.floor(f), u=f-i, u2=u*u, u3=u2*u;
+  const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[Math.min(n,i+1)],p3=P[Math.min(n,i+2)];
+  return [
+    0.5*((2*p1[0])+(-p0[0]+p2[0])*u+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*u2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*u3),
+    0.5*((2*p1[1])+(-p0[1]+p2[1])*u+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*u2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*u3)];
+}
+const S=260, CPT=[];
+for(let i=0;i<=S;i++) CPT.push(catmull(i/S));
+function normalAt(i){const a=CPT[Math.max(0,i-1)],b=CPT[Math.min(S,i+1)];let dx=b[0]-a[0],dy=b[1]-a[1];const l=Math.hypot(dx,dy)||1;return [-dy/l,dx/l];}
+function widthAt(t){return 16+52*Math.pow(t,1.35);}
+function pointOn(t){const i=Math.round(t*S),n=normalAt(i);return {x:CPT[i][0],y:CPT[i][1],nx:n[0],ny:n[1],tx:-n[1],ty:n[0],w:widthAt(t)};}
+
+function ribbonPath(t0,t1,k){
+  ctx.beginPath();
+  const i0=Math.round(t0*S),i1=Math.round(t1*S);
+  for(let i=i0;i<=i1;i++){const t=i/S,n=normalAt(i),w=widthAt(t)*k;
+    const x=CPT[i][0]+n[0]*w,y=CPT[i][1]+n[1]*w;i===i0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  for(let i=i1;i>=i0;i--){const t=i/S,n=normalAt(i),w=widthAt(t)*k;
+    ctx.lineTo(CPT[i][0]-n[0]*w,CPT[i][1]-n[1]*w);}
+  ctx.closePath();
+}
+
+/* ================= 纪元彩段（时间→河段） ================= */
+const ZONES=[
+ ['原初宇宙',0,0.05,'#6a5ad0'],
+ ['星系时代',0.05,0.16,'#3f6fc0'],
+ ['太阳系与地球',0.16,0.27,'#c07a38'],
+ ['生命黎明',0.27,0.37,'#2f9c85'],
+ ['古生代',0.37,0.46,'#7fb04a'],
+ ['中生代·恐龙',0.46,0.545,'#b09a3e'],
+ ['石器时代',0.545,0.61,'#c09058'],
+ ['农业文明',0.61,0.68,'#e0b455'],
+ ['青铜与王国',0.68,0.75,'#d0803f'],
+ ['轴心与帝国',0.75,0.81,'#c56a4a'],
+ ['中世纪',0.81,0.86,'#8f7ab0'],
+ ['文艺复兴·大航海',0.86,0.91,'#5f8cd0'],
+ ['工业时代',0.91,0.955,'#8ca0b5'],
+ ['信息时代·今天',0.955,1,'#45c8b8']
+];
+
+/* ================= 事件河灯（示例） ================= */
+const LANTERNS=[
+ [0.006,'宇宙大爆炸','#9d8cff',1],
+ [0.315,'生命起源','#5fce82',-1],
+ [0.415,'寒武纪大爆发','#5fce82',1],
+ [0.50,'恐龙灭绝','#56b8e8',-1],
+ [0.575,'智人走出非洲','#f0b64f',1],
+ [0.645,'农业革命','#f0b64f',-1],
+ [0.72,'甲骨文·商','#f0b64f',1],
+ [0.78,'孔子·佛陀·秦','#f0b64f',-1],
+ [0.84,'盛唐·敦煌','#f58cc5',1],
+ [0.885,'文艺复兴·哥伦布','#f0b64f',-1],
+ [0.93,'牛顿·瓦特·蒸汽机','#ff7f6e',1],
+ [0.962,'登月·万维网','#ff7f6e',-1],
+ [0.995,'AI大模型','#9d8cff',1]
+];
+
+const ERASHOW=[[0.025,'原初宇宙'],[0.215,'太阳系与地球'],[0.32,'生命黎明'],[0.50,'中生代·恐龙'],[0.645,'农业文明'],[0.78,'轴心与帝国'],[0.885,'文艺复兴'],[0.977,'信息时代']];
+
+let dashOff=0;
+function draw(time){
+  const T=time/1000;
+  /* ---------- 星空与银河 ---------- */
+  const sky=ctx.createLinearGradient(0,0,0,H);
+  sky.addColorStop(0,'#03050d');sky.addColorStop(.55,'#071022');sky.addColorStop(1,'#0c152c');
+  ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+  const rnd=mulberry32(424242);
+  ctx.save();ctx.translate(W*0.36,H*0.30);ctx.rotate(-0.55);ctx.scale(1,0.20);
+  const g2=ctx.createRadialGradient(0,0,0,0,0,860);
+  g2.addColorStop(0,'rgba(195,208,255,0.15)');g2.addColorStop(0.55,'rgba(150,170,240,0.06)');g2.addColorStop(1,'rgba(150,170,240,0)');
+  ctx.fillStyle=g2;ctx.beginPath();ctx.arc(0,0,860,0,Math.PI*2);ctx.fill();ctx.restore();
+  for(let i=0;i<520;i++){const x=rnd()*W,y=rnd()*H,r=rnd()*1.3+0.2;
+    const tw=0.55+0.45*Math.sin(T*1.3+i);
+    ctx.fillStyle='rgba(215,225,255,'+(0.2+rnd()*0.5)*tw+')';
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();}
+
+  /* ---------- 河道水体 ---------- */
+  ribbonPath(0,1,1.06);
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fill();          // 岸影
+  ribbonPath(0,1,1);
+  ctx.fillStyle='#0c2838';ctx.fill();
+  ZONES.forEach(function(z){ribbonPath(z[1],z[2],0.94);ctx.fillStyle=hexA(z[3],0.42);ctx.fill();});
+
+  /* 水面流动波纹（滚滚） */
+  ctx.save();ctx.setLineDash([30,40]);ctx.lineCap='round';
+  [-0.5,-0.18,0.18,0.5].forEach(function(off,k){
+    ctx.beginPath();
+    for(let i=0;i<=S;i++){const t=i/S,n=normalAt(i),w=widthAt(t)*off;
+      const x=CPT[i][0]+n[0]*w,y=CPT[i][1]+n[1]*w;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}
+    ctx.strokeStyle='rgba(150,210,235,'+(0.16+0.08*Math.sin(T*2+k))+')';
+    ctx.lineWidth=2.6;ctx.lineDashOffset=dashOff-k*12;ctx.stroke();
+  });
+  ctx.restore();
+
+  /* ---------- 纪元跌水（阶段交界·白浪） ---------- */
+  function waterfall(t){
+    ribbonPath(t-0.014,t+0.014,1);
+    ctx.fillStyle='rgba(225,242,255,0.5)';ctx.fill();
+    const p=pointOn(t),r2=mulberry32(Math.round(t*9999));
+    for(let k=0;k<30;k++){
+      const o=(r2()*2-1)*p.w,d=(r2()*22-11);
+      ctx.fillStyle='rgba(238,249,255,'+(0.25+r2()*0.5)+')';
+      ctx.beginPath();ctx.arc(p.x+p.tx*d+p.nx*o,p.y+p.ty*d+p.ny*o,1+r2()*2.2,0,Math.PI*2);ctx.fill();
+    }
+  }
+  waterfall(0.545);waterfall(0.91);
+
+  /* ---------- 源头与入海口 ---------- */
+  const src=pointOn(0.012);
+  let g=ctx.createRadialGradient(src.x,src.y,0,src.x,src.y,90);
+  g.addColorStop(0,'rgba(255,240,210,0.95)');g.addColorStop(0.3,'rgba(255,210,140,0.5)');g.addColorStop(1,'rgba(255,190,110,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(src.x,src.y,90,0,Math.PI*2);ctx.fill();
+  const sea=pointOn(0.995);
+  g=ctx.createRadialGradient(sea.x,sea.y,0,sea.x,sea.y,150);
+  g.addColorStop(0,'rgba(255,200,120,0.85)');g.addColorStop(0.4,'rgba(255,170,100,0.3)');g.addColorStop(1,'rgba(255,170,100,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(sea.x,sea.y,150,0,Math.PI*2);ctx.fill();
+
+  /* ---------- 纪元名 ---------- */
+  ctx.textAlign='center';
+  ERASHOW.forEach(function(e,idx){
+    const p=pointOn(e[0]),side=idx%2===0?1:-1;
+    ctx.font='600 15px "Microsoft YaHei"';
+    ctx.shadowColor='rgba(0,0,0,0.9)';ctx.shadowBlur=6;
+    ctx.fillStyle=hexA('#ffe6c0',0.92);
+    ctx.fillText(e[1],p.x+p.nx*side*p.w*2.6,p.y+p.ny*side*p.w*2.6);
+    ctx.shadowBlur=0;
+  });
+
+  /* ---------- 事件河灯 ---------- */
+  LANTERNS.forEach(function(L,idx){
+    const p=pointOn(L[0]),side=L[3];
+    const bob=Math.sin(T*1.7+idx*1.9)*2.2;
+    const x=p.x+p.nx*side*p.w*0.30,y=p.y+p.ny*side*p.w*0.30+bob;
+    let gl=ctx.createRadialGradient(x,y,0,x,y,20);
+    gl.addColorStop(0,hexA(L[2],0.95));gl.addColorStop(0.35,hexA(L[2],0.45));gl.addColorStop(1,hexA(L[2],0));
+    ctx.fillStyle=gl;ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,245,0.95)';ctx.beginPath();ctx.arc(x,y,3.4,0,Math.PI*2);ctx.fill();
+    /* 标签 */
+    ctx.font='500 13px "Microsoft YaHei"';
+    const tw2=ctx.measureText(L[1]).width+18;
+    const lx=x-tw2/2,ly=y-34;
+    ctx.fillStyle='rgba(8,12,20,0.8)';
+    ctx.beginPath();ctx.roundRect(lx,ly,tw2,22,7);ctx.fill();
+    ctx.strokeStyle=hexA(L[2],0.75);ctx.lineWidth=1.4;ctx.stroke();
+    ctx.fillStyle='#f3ede2';ctx.fillText(L[1],x,ly+15.5);
+  });
+
+  /* ---------- 标注序号 ---------- */
+  function badge(x,y,n){
+    ctx.fillStyle='rgba(8,12,20,0.85)';ctx.beginPath();ctx.arc(x,y,11,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#ffd27f';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#ffd27f';ctx.font='600 12px "Microsoft YaHei"';ctx.textAlign='center';ctx.fillText(String(n),x,y+4);
+  }
+  const wf=pointOn(0.545);badge(wf.x+wf.nx*wf.w+16,wf.y-14,1);
+  const ln=pointOn(0.645);badge(ln.x+ln.nx*ln.w*0.3+26,ln.y+ln.ny*ln.w*0.3-40,2);
+  badge(src.x+34,src.y-46,3);
+  badge(sea.x-40,sea.y-70,4);
+
+  /* ---------- 界面线框 ---------- */
+  function panel(x,y,w,h){
+    ctx.fillStyle='rgba(10,15,26,0.74)';
+    ctx.beginPath();ctx.roundRect(x,y,w,h,12);ctx.fill();
+    ctx.strokeStyle='rgba(255,210,127,0.22)';ctx.lineWidth=1;ctx.stroke();
+  }
+  /* 顶栏 */
+  panel(0,0,W,58);
+  ctx.textAlign='left';
+  ctx.fillStyle='#ffd9a0';ctx.font='700 20px "Microsoft YaHei"';ctx.fillText('🏞️ 滚滚长河',22,36);
+  ctx.fillStyle='#8b8478';ctx.font='12px "Microsoft YaHei"';ctx.fillText('一条奔流 138 亿年的大河 · 源头是大爆炸，入海口是今天',176,35);
+  ['🎬 飞览全程','⏸ 暂停','🎯 全景复位','📖 科普课堂','❓ 帮助'].forEach(function(b,i){
+    const bx=W-560+i*108;
+    ctx.fillStyle='rgba(255,255,255,0.06)';ctx.beginPath();ctx.roundRect(bx,14,100,30,8);ctx.fill();
+    ctx.fillStyle='#e8e2d4';ctx.font='12px "Microsoft YaHei"';ctx.textAlign='center';ctx.fillText(b,bx+50,34);ctx.textAlign='left';
+  });
+  /* 年份 HUD */
+  ctx.textAlign='center';
+  ctx.fillStyle='#ffd27f';ctx.font='700 30px "Microsoft YaHei"';ctx.shadowColor='rgba(255,180,80,0.5)';ctx.shadowBlur=18;
+  ctx.fillText('公元 1949',800,104);ctx.shadowBlur=0;
+  ctx.fillStyle='#9a938a';ctx.font='12px "Microsoft YaHei"';
+  ctx.fillText('🎬 飞览全程 · 工业时代 · 河灯 62/100',800,126);
+  ctx.fillStyle='rgba(255,255,255,0.12)';ctx.beginPath();ctx.roundRect(675,136,250,4,2);ctx.fill();
+  ctx.fillStyle='#ffcf6e';ctx.beginPath();ctx.roundRect(675,136,250*0.93,4,2);ctx.fill();
+  /* 左侧面板 */
+  panel(14,160,232,444);
+  ctx.textAlign='left';
+  ctx.fillStyle='#9a938a';ctx.font='600 12px "Microsoft YaHei"';ctx.fillText('⏱ 河道刻度',28,184);
+  [['深时全景',1],['文明时代',0],['近现代',0]].forEach(function(m,i){
+    ctx.fillStyle=m[1]?'rgba(255,210,127,0.16)':'rgba(255,255,255,0.05)';
+    ctx.beginPath();ctx.roundRect(28+i*70,194,66,26,7);ctx.fill();
+    ctx.fillStyle=m[1]?'#ffd27f':'#9a938a';ctx.font='11px "Microsoft YaHei"';ctx.textAlign='center';
+    ctx.fillText(m[0],28+i*70+33,211);ctx.textAlign='left';
+  });
+  ctx.fillStyle='#9a938a';ctx.font='600 12px "Microsoft YaHei"';ctx.fillText('🗓 纪元年表 · 点击飞往',28,252);
+  ZONES.slice(2,11).forEach(function(z,i){
+    const y=264+i*24;
+    ctx.fillStyle=hexA(z[3],0.9);ctx.beginPath();ctx.arc(36,y+8,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#d8d2c6';ctx.font='12px "Microsoft YaHei"';ctx.fillText(z[0],50,y+12);
+  });
+  ctx.fillStyle='#9a938a';ctx.font='600 12px "Microsoft YaHei"';ctx.fillText('🔍 搜索 / 🗂 类别筛选 / 👁 显示',28,500);
+  ctx.fillStyle='rgba(255,255,255,0.07)';ctx.beginPath();ctx.roundRect(28,510,204,26,7);ctx.fill();
+  ctx.fillStyle='#6b655c';ctx.font='12px "Microsoft YaHei"';ctx.fillText('如：恐龙 / 登月 / 秦…',40,527);
+  /* 右侧档案卡 */
+  panel(1348,160,238,404);
+  ctx.textAlign='left';
+  ctx.fillStyle=hexA('#f0b64f',0.9);ctx.font='11px "Microsoft YaHei"';
+  ctx.beginPath();ctx.roundRect(1362,176,56,20,10);ctx.fill();
+  ctx.fillStyle='#1a1408';ctx.fillText('🏛 文明',1372,190);
+  ctx.fillStyle='#ffd27f';ctx.beginPath();ctx.roundRect(1426,176,88,20,10);ctx.fill();
+  ctx.fillStyle='#3a2c08';ctx.fillText('公元前221年',1436,190);
+  ctx.fillStyle='#f3ede2';ctx.font='700 18px "Microsoft YaHei"';ctx.fillText('秦统一中国',1362,226);
+  ctx.fillStyle='#8b8478';ctx.font='italic 11px "Microsoft YaHei"';ctx.fillText('Qin Unifies China',1362,244);
+  ctx.fillStyle='rgba(90,130,255,0.14)';ctx.beginPath();ctx.roundRect(1362,258,210,30,8);ctx.fill();
+  ctx.fillStyle='#aecbff';ctx.font='12px "Microsoft YaHei"';ctx.fillText('🌌 宇宙日历：12月31日 23:59:48',1372,278);
+  ctx.fillStyle='#d8d2c6';ctx.font='12.5px "Microsoft YaHei"';
+  ctx.fillText('秦王嬴政扫平六国：书同文、车同',1362,312);
+  ctx.fillText('轨，中央集权帝制沿用两千年。',1362,332);
+  ctx.fillStyle='#ffd27f';ctx.font='600 13px "Microsoft YaHei"';ctx.fillText('✦ 趣味知识',1362,368);
+  ctx.fillStyle='#c9c3b7';ctx.font='12px "Microsoft YaHei"';
+  ctx.fillText('· 兵马俑千人千面',1372,390);
+  ctx.fillText('· 「皇帝」称号用到 1912 年',1372,410);
+  ctx.fillStyle='#ffd27f';ctx.font='600 13px "Microsoft YaHei"';ctx.fillText('⏳ 同时代的星空',1362,444);
+  ['丝绸之路','阿基米德','罗马帝国'].forEach(function(c,i){
+    ctx.fillStyle='rgba(255,255,255,0.06)';ctx.beginPath();ctx.roundRect(1362+i*72,454,66,22,11);ctx.fill();
+    ctx.fillStyle='#d8d2c6';ctx.font='10.5px "Microsoft YaHei"';ctx.textAlign='center';ctx.fillText(c,1395+i*72,469);ctx.textAlign='left';
+  });
+  /* 底部小知识 */
+  panel(420,848,760,38);
+  ctx.textAlign='center';ctx.fillStyle='#cfc8ba';ctx.font='13px "Microsoft YaHei"';
+  ctx.fillText('💡 小知识：如果把宇宙 138 亿年压缩成 1 年，人类文字史只占最后的 12 秒。',800,872);
+  /* 标注说明 */
+  ctx.fillStyle='#8b93a4';ctx.font='12.5px "Microsoft YaHei"';
+  ctx.fillText('① 纪元彩段 + 跌水瀑布（阶段一目了然）   ② 事件河灯 · 单击看档案   ③ 源头 · 大爆炸   ④ 入海口 · 今天   ⑤ 🎬 飞览全程 40 秒',800,824);
+}
+function frame(t){dashOff=-t/1000*36;draw(t);requestAnimationFrame(frame);}
+draw(0);                                   // 先同步绘一帧（不依赖 rAF）
+window.__drawMock = draw;                  // 供无头/节流环境补帧
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

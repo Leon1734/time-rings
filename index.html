@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>滚滚长河 · 138亿年奔流史</title>
+  <meta name="description" content="把宇宙138亿年铺成一条奔流的大河：源头是大爆炸，入海口是今天。河水按纪元染色，纪元交界跌水瀑布，历史事件是漂浮的河灯。航拍画卷视角，飞览全程。">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏞️</text></svg>">
+</head>
+<body>
+  <div id="scene-container"></div>
+  <div id="vignette"></div>
+
+  <!-- 顶部栏 -->
+  <header id="topbar">
+    <div id="brand">
+      <h1>🏞️ 滚滚长河</h1>
+      <p>一条奔流 138 亿年的大河 · 源头是大爆炸，入海口是今天</p>
+    </div>
+    <nav id="top-actions">
+      <button id="btn-pause" title="时间凝固：水流、波浪、河灯与飞览全部暂停（空格）">⏸ 暂停</button>
+      <button id="btn-fly" title="航拍镜头从源头飞到入海口；飞览中再点=暂停飞览">🎬 飞览全程</button>
+      <button id="btn-speed" title="飞览速度：慢 / 标准 / 快">⚡ 1×</button>
+      <button id="btn-overview" title="升到高空看整条大河的蜿蜒全貌">🗺 全河鸟瞰</button>
+      <button id="btn-quiz" title="寻宝问答：按线索找到目标河灯，连对计分">🏆 问答</button>
+      <button id="btn-day" title="切换白天 / 星夜两种渲染氛围">🌙 星夜</button>
+      <button id="btn-voice" title="语音导览：飞览时播报纪元，单击河灯播报事件">🎙 导览</button>
+      <button id="btn-sound" title="环境流水声（合成，可关闭）">🔊 水声</button>
+      <button id="btn-rec" title="录制飞览全程为 webm 视频，到达入海口后自动下载">🎥 录制</button>
+      <button id="btn-shot" title="把当前画面存为 PNG 图片">🖼️ 画面</button>
+      <button id="btn-atlas" data-modal="modal-atlas" title="浏览全部事件（按时代分卷）">📚 图鉴</button>
+      <button data-modal="modal-science" title="长河隐喻 / 深时 / 宇宙日历">📖 科普课堂</button>
+      <button data-modal="modal-help" title="操作说明">❓ 帮助</button>
+      <button id="btn-fs" title="全屏显示 / 退出全屏">⛶ 全屏</button>
+    </nav>
+  </header>
+
+  <!-- 录制指示灯 -->
+  <div id="rec-chip" class="hidden"><i></i>REC</div>
+
+  <!-- 问答卡片 -->
+  <div id="quiz-card" class="hidden">
+    <div id="quiz-scope">
+      <button data-scope="all" class="on">🌏 全部</button>
+      <button data-scope="cn">🐉 中国</button>
+      <button data-scope="world">🗺️ 世界</button>
+    </div>
+    <div id="quiz-stats">✅ 连对 0 · 已答 0 题</div>
+    <div id="quiz-q">🔎 请找到……</div>
+    <div id="quiz-hints"></div>
+    <div id="quiz-feedback"></div>
+    <div id="quiz-actions">
+      <button id="btn-quiz-hint">💡 提示（飞往河段）</button>
+      <button id="btn-quiz-skip">⏭ 跳过这题</button>
+    </div>
+  </div>
+
+  <!-- 年份 HUD -->
+  <div id="hud">
+    <div id="hud-year">138亿年前</div>
+    <div id="hud-sub">🎬 准备从源头起飞……</div>
+    <div id="hud-progress"><i></i></div>
+  </div>
+
+  <!-- 移动端面板开关 -->
+  <button id="panel-toggle" title="展开 / 收起控制面板">⚙️</button>
+
+  <!-- 左侧控制面板 -->
+  <aside id="side-panel">
+    <h3>⏱ 河道刻度</h3>
+    <div id="mode-seg">
+      <button data-mode="deep" class="on" title="138亿年，对数河道：每段数量级等长">深时全景</button>
+      <button data-mode="civ" title="1.2万年，线性河道：看文明史">文明时代</button>
+      <button data-mode="modern" title="650年，线性河道：看近现代">近现代</button>
+    </div>
+
+    <h3>🗓 纪元年表 · 点击飞往</h3>
+    <div id="era-nav"></div>
+
+    <h3>🔍 搜索事件</h3>
+    <div id="search-box">
+      <input type="text" id="search-input" placeholder="如：恐龙 / 登月 / 秦" autocomplete="off">
+      <div id="search-drop" class="hidden"></div>
+    </div>
+
+    <h3>🗂 类别筛选</h3>
+    <div id="legend"></div>
+    <div id="ev-count">—</div>
+    <div id="explored">🧭 已探索 0 个事件</div>
+    <button id="today-lantern" class="hidden" title="点击直达这盏河灯">🌟 今日之灯</button>
+
+    <h3>👁 显示</h3>
+    <label class="toggle"><input type="checkbox" id="tg-labels" checked>纪元 / 河灯标签</label>
+    <p class="hint">拖拽环绕 · 滚轮缩放 · 空格+拖拽平移<br>轻点空格 / P 暂停 · ←→ 沿河漫游<br>拖动进度条跳转 · 单击河灯看档案</p>
+  </aside>
+
+  <!-- 右侧信息面板 -->
+  <aside id="detail-panel" class="hidden">
+    <button id="btn-close-info" title="关闭">✕</button>
+    <div id="panel-body"></div>
+  </aside>
+
+  <!-- 悬停提示 -->
+  <div id="tooltip" class="hidden"></div>
+
+  <!-- 底部小知识 -->
+  <div id="ticker"><span id="tip-text"></span></div>
+
+  <!-- 成就解锁提示 -->
+  <div id="achv-toast" class="hidden">
+    <b id="achv-emoji">🏆</b>
+    <div><span id="achv-title">成就解锁</span><i id="achv-sub"></i></div>
+  </div>
+
+  <!-- 小地图 -->
+  <canvas id="minimap" width="680" height="472" title="小地图：金点=镜头 · 白点=视线落点 · 点击任意处跳转"></canvas>
+
+  <!-- 科普课堂 -->
+  <div class="modal hidden" id="modal-science">
+    <div class="modal-card">
+      <button class="modal-close">✕</button>
+      <h2>📖 科普课堂</h2>
+
+      <h3 class="sec">🏞️ 历史长河：从大爆炸到今天</h3>
+      <div id="science-river"></div>
+
+      <h3 class="sec">🌌 深时与对数河道</h3>
+      <div id="science-log"></div>
+
+      <h3 class="sec">🌏 中外大事对照</h3>
+      <table id="science-vs-table" class="cal"></table>
+      <p class="src-note">同一时期的中华文明与世界大事对照，仅供速览。</p>
+
+      <h3 class="sec">📜 时代金句</h3>
+      <div id="science-quotes"></div>
+
+      <h3 class="sec">❓ 常见疑问</h3>
+      <div id="science-faq"></div>
+
+      <h3 class="sec">🗓 宇宙日历（卡尔·萨根）</h3>
+      <p id="science-cal-note"></p>
+      <table id="science-cal-table" class="cal"></table>
+      <p id="science-cal-foot" class="src-note"></p>
+
+      <p class="src-note">年代数据取学界通行近似值；部分事件（如生命起源的确切时间、二里头与夏的对应关系）学界仍在研究，存在争议或区间，仅供科普参考。</p>
+    </div>
+  </div>
+
+  <!-- 全图鉴 -->
+  <div class="modal hidden" id="modal-atlas">
+    <div class="modal-card atlas-card">
+      <button class="modal-close">✕</button>
+      <h2>📚 长河图鉴 · 按时代浏览</h2>
+      <p class="src-note">点击任意事件直达其河灯；展开时代卷轴浏览全部条目。</p>
+      <div id="atlas-list"></div>
+    </div>
+  </div>
+
+  <!-- 帮助 -->
+  <div class="modal hidden" id="modal-help">
+    <div class="modal-card">
+      <button class="modal-close">✕</button>
+      <h2>❓ 使用帮助</h2>
+      <div id="help-list"></div>
+    </div>
+  </div>
+
+  <div id="error-banner" class="hidden"></div>
+
+  <script src="js/lib/three.min.js"></script>
+  <script src="js/lib/OrbitControls.js"></script>
+  <script src="js/data.js?v=river13"></script>
+  <script src="js/textures.js?v=river13"></script>
+  <script src="js/scene.js?v=river13"></script>
+  <script src="js/app.js?v=river13"></script>
+</body>
+</html>
