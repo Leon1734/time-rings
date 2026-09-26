@@ -1,0 +1,15 @@
+{
+  "name": "滚滚长河 · 138亿年奔流史",
+  "short_name": "滚滚长河",
+  "description": "把宇宙138亿年铺成一条奔流的大河：源头是大爆炸，入海口是今天。历史事件是漂浮的河灯，航拍画卷视角，飞览全程。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#04060c",
+  "theme_color": "#04060c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -166,6 +166,11 @@
       speak('进入' + era.name + '，' + D.fmtAgo(era.from) + '至' +
         (era.to <= 0 ? '今天' : D.fmtAgo(era.to)) + '。' + firstSentence(era.blurb), true);
     }
+    /* 纪录片模式：纪元切换时刷字幕 */
+    if (docMode && S.state.flying && !S.state.paused && g.eraIdx >= 0 && g.eraIdx !== docEraIdx) {
+      docEraIdx = g.eraIdx;
+      docCaption(g.eraIdx);
+    }
   });
   S.onFlyDone(function () {
     $('hud-year').textContent = '今天';
@@ -593,6 +598,30 @@
           syncButtons();
         });
       });
+      /* 搜索过滤：命中关键词时自动展开所在卷 */
+      const search = document.getElementById('atlas-search');
+      if (search) {
+        search.value = '';
+        const handler = function () {
+          const q = search.value.trim().toLowerCase();
+          list.querySelectorAll('details').forEach(function (det) {
+            const hitEvs = det.querySelectorAll('[data-goto]');
+            let any = !q;
+            hitEvs.forEach(function (b) {
+              b.style.display = (!q || b.textContent.toLowerCase().indexOf(q) >= 0) ? '' : 'none';
+              if (q && b.textContent.toLowerCase().indexOf(q) >= 0) any = true;
+            });
+            det.style.display = any ? '' : 'none';
+            if (q) det.open = any;
+          });
+        };
+        if (!search.dataset.bound) {
+          search.addEventListener('input', handler);
+          search.dataset.bound = '1';
+        } else {
+          handler();
+        }
+      }
       atlasBuiltMode = S.state.mode;
     }
     $('modal-atlas').classList.remove('hidden');
@@ -991,6 +1020,48 @@
     if (S.state.searchSet) S.setSearch(null);
   }
 
+  /* ================= 📽️ 纪录片模式 ================= */
+  let docMode = false, docEraIdx = -1, docTimer = null;
+  function docCaption(eraIdx) {
+    const eras = D.ERAS[S.state.mode];
+    const era = eras[eraIdx];
+    if (!era) return;
+    const evs = S.eventsInMode()
+      .filter(function (e) {
+        const p = S.progressOf(e.ago);
+        const pA = Math.min(S.progressOf(era.from), S.progressOf(era.to));
+        const pB = Math.max(S.progressOf(era.from), S.progressOf(era.to));
+        return p >= pA && p <= pB && e.imp >= 2;
+      })
+      .sort(function (a, b) { return b.ago - a.ago; })
+      .slice(0, 4)
+      .map(function (e) { return e.title; });
+    $('doc-era').textContent = era.name + ' · ' + D.fmtAgo(era.from) + ' ～ ' + (era.to <= 0 ? '今天' : D.fmtAgo(era.to));
+    $('doc-events').textContent = evs.length ? '本河段大事：' + evs.join(' · ') : era.blurb;
+    $('doc-caption').classList.remove('hidden');
+    if (docTimer) clearTimeout(docTimer);
+    docTimer = setTimeout(function () { $('doc-caption').classList.add('hidden'); }, 9000);
+  }
+  $('btn-doc').addEventListener('click', function () {
+    docMode = !docMode;
+    this.classList.toggle('on', docMode);
+    if (docMode) {
+      lastEraSpoken = -1;
+      docEraIdx = -1;
+      if (!S.state.flying || S.state.flyP > 0.9) S.replay();   // 未在飞览或已到头 → 从头放映
+      speak('纪录片模式开启，让我们从宇宙大爆炸开始。', true);
+    } else {
+      $('doc-caption').classList.add('hidden');
+      if (window.speechSynthesis) speechSynthesis.cancel();
+    }
+  });
+  S.onFlyDone(function () {
+    if (docMode) {
+      $('btn-doc').dispatchEvent(new MouseEvent('click', { bubbles: true }));   // 放映结束自动关闭
+      speak('纪录片播放完毕，感谢观赏。', false);
+    }
+  });
+
   /* ================= 🌟 今日之灯 ================= */
   function setupTodayLantern() {
     const d = new Date();
@@ -1088,5 +1159,9 @@
     setupTodayLantern();
     restorePrefs();
     applyHash();        // 解析分享链接（#m=模式&e=事件），有事件定位则不自动起飞
+    /* PWA：https/localhost 下注册 Service Worker（离线可玩、可安装） */
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
   });
 })();

@@ -477,3 +477,28 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 #atlas-list details[open] summary::after { transform: rotate(90deg); }
 #atlas-list details[open] summary { border-bottom: 1px solid rgba(255,255,255,0.08); }
 #atlas-list .atlas-ev { padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+
+/* ================= 纪录片字幕条 ================= */
+#doc-caption {
+  position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
+  z-index: 44; width: min(720px, 88vw); text-align: center;
+  background: rgba(6,10,18,0.82); border: 1px solid rgba(255,210,127,0.3);
+  border-radius: 12px; padding: 10px 18px;
+  backdrop-filter: blur(8px);
+  transition: opacity .5s;
+}
+#doc-caption.hidden { display: none; }
+#doc-caption b {
+  display: block; font-size: 17px; color: var(--gold);
+  letter-spacing: 2px; margin-bottom: 3px;
+}
+#doc-caption span { font-size: 12.5px; color: #cfc8ba; line-height: 1.6; display: block; }
+
+/* ================= 图鉴搜索框 ================= */
+#atlas-search {
+  width: 100%; padding: 9px 12px; font-size: 13px; margin-bottom: 10px;
+  background: rgba(255,255,255,0.06); color: var(--text);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; outline: none;
+}
+#atlas-search:focus { border-color: rgba(255,210,127,0.5); }
