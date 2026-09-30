@@ -393,7 +393,8 @@
   /* ================= 🏆 问答模式（寻宝） ================= */
   let quizOn = false, quizPool = [], quizIdx = 0, quizTarget = null;
   let quizRound = 0, quizStreak = 0, quizHintUsed = false;
-  let quizScope = 'all';                   // 'all' | 'cn' | 'world'
+  let quizScope = 'all';                   // 'all' | 'cn' | 'grc' | 'isl' | 'ind' | 'world'
+  let quizRemain = 0, quizWrong = [];
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -405,7 +406,10 @@
     quizPool = shuffle(S.eventsInMode().filter(function (e) {
       if (e.imp < 2) return false;
       if (quizScope === 'cn') return !!e.cn;
-      if (quizScope === 'world') return !e.cn;
+      if (quizScope === 'grc') return e.cult === 'grc';
+      if (quizScope === 'isl') return e.cult === 'isl';
+      if (quizScope === 'ind') return e.cult === 'ind';
+      if (quizScope === 'world') return !e.cn && !e.cult;
       return true;
     }));
     quizIdx = 0;
@@ -452,11 +456,14 @@
       '<span class="chip">' + esc(eraNameOf(ev)) + '</span>' +
       '<span class="chip year">' + D.fmtAgo(ev.ago) + '</span>';
     $('quiz-feedback').textContent = '';
+    const rem = document.getElementById('quiz-remain');
+    if (rem) rem.textContent = '⏳ 25s';
     updateQuizStats();
     speak('请找到，' + ev.title + '。', true);
   }
   function updateQuizStats() {
-    $('quiz-stats').textContent = '✅ 连对 ' + quizStreak + ' · 已答 ' + quizRound + ' 题 · 🏆 最佳 ' + quizBest;
+    $('quiz-stats').textContent = '✅ 连对 ' + quizStreak + ' · 已答 ' + quizRound + ' 题 · 🏆 最佳 ' + quizBest +
+      (quizWrong.length ? ' · ❗ 错题 ' + quizWrong.length : '');
   }
   S.onQuiz(function (res) {
     if (!quizOn) return;
@@ -470,6 +477,7 @@
       speak('答对了！', false);
     } else {
       quizStreak = 0;
+      if (quizTarget && quizWrong.indexOf(quizTarget.id) < 0) quizWrong.push(quizTarget.id);
       const clicked = eventById(res.id);
       $('quiz-feedback').textContent = '❌ 这是「' + (clicked ? clicked.title : '别的河灯') + '」，再找找';
       $('quiz-feedback').className = 'bad';
@@ -500,6 +508,20 @@
       nextQuestion();
       syncButtons();
     });
+  });
+
+  /* ❗ 错题重练：只出答错过的题 */
+  $('btn-quiz-wrong').addEventListener('click', function () {
+    if (!quizOn || !quizWrong.length) {
+      const fb = $('quiz-feedback');
+      fb.textContent = '暂无错题记录，继续加油！';
+      fb.className = 'ok';
+      return;
+    }
+    quizPool = shuffle(quizWrong.map(function (id) { return eventById(id); }).filter(Boolean));
+    quizIdx = 0;
+    quizTarget = null;
+    nextQuestion();
   });
 
   $('btn-quiz-hint').addEventListener('click', function () {
@@ -1073,6 +1095,31 @@
     }
   });
   setInterval(syncButtons, 600);
+
+  /* ⏳ 问答倒计时（按真实时间差计算；时间凝固时暂停计时） */
+  let quizLastTick = 0;
+  setInterval(function () {
+    if (!quizOn || !quizTarget) { quizLastTick = 0; return; }
+    if (S.state.paused) { quizLastTick = 0; return; }
+    const nowT = Date.now();
+    const delta = quizLastTick ? Math.min(1, (nowT - quizLastTick) / 1000) : 0;
+    quizLastTick = nowT;
+    quizRemain -= delta;
+    const el = document.getElementById('quiz-remain');
+    if (el) el.textContent = '⏳ ' + Math.max(0, Math.ceil(quizRemain)) + 's';
+    if (quizRemain <= 0) {
+      quizRemain = 0;
+      quizStreak = 0;
+      const fb = document.getElementById('quiz-feedback');
+      if (fb) {
+        fb.textContent = '⏰ 超时！正确答案是「' + quizTarget.title + '」';
+        fb.className = 'bad';
+      }
+      pluck(200, 0.25, 0.05);
+      updateQuizStats();
+      setTimeout(function () { if (quizOn) nextQuestion(); }, 1600);
+    }
+  }, 250);
 
   /* ================= 搜索 ================= */
   const searchInput = $('search-input');
