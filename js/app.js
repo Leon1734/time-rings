@@ -395,6 +395,7 @@
   let quizRound = 0, quizStreak = 0, quizHintUsed = false;
   let quizScope = 'all';                   // 'all' | 'cn' | 'grc' | 'isl' | 'ind' | 'world'
   let quizRemain = 0, quizWrong = [];
+  try { quizWrong = JSON.parse(localStorage.getItem('tr-wrong') || '[]'); } catch (e) {}
   function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -470,6 +471,10 @@
     quizRound++;
     if (res.correct) {
       quizStreak++;
+      if (quizWrong.indexOf(res.id) >= 0) {
+        quizWrong = quizWrong.filter(function (id) { return id !== res.id; });
+        try { localStorage.setItem('tr-wrong', JSON.stringify(quizWrong)); } catch (e) {}
+      }
       if (quizStreak > quizBest) { quizBest = quizStreak; savePrefs(); }
       $('quiz-feedback').textContent = '🎉 答对了！';
       $('quiz-feedback').className = 'ok';
@@ -477,7 +482,10 @@
       speak('答对了！', false);
     } else {
       quizStreak = 0;
-      if (quizTarget && quizWrong.indexOf(quizTarget.id) < 0) quizWrong.push(quizTarget.id);
+      if (quizTarget && quizWrong.indexOf(quizTarget.id) < 0) {
+        quizWrong.push(quizTarget.id);
+        try { localStorage.setItem('tr-wrong', JSON.stringify(quizWrong)); } catch (e) {}
+      }
       const clicked = eventById(res.id);
       $('quiz-feedback').textContent = '❌ 这是「' + (clicked ? clicked.title : '别的河灯') + '」，再找找';
       $('quiz-feedback').className = 'bad';
@@ -1212,7 +1220,12 @@
   function setupTodayLantern() {
     const d = new Date();
     const seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-    const pool = D.EVENTS.filter(function (e) { return e.imp >= 2; });
+    let pool = D.EVENTS.filter(function (e) { return e.imp >= 2; });
+    try {                                   // 优先推荐还没探索过的事件
+      const ex = JSON.parse(localStorage.getItem('tr-explored') || '{}');
+      const fresh = pool.filter(function (e) { return !ex[e.id]; });
+      if (fresh.length) pool = fresh;
+    } catch (e) {}
     const ev = pool[seed % pool.length];
     if (!ev) return;
     const btn = document.getElementById('today-lantern');
