@@ -899,6 +899,7 @@
       heroHtml(D.CATS[ev.cat].color, D.CAT_EMOJI[ev.cat] || '📜') +
       '<div class="tags">' + catChip(ev.cat) +
         (ev.cn ? '<span class="chip" style="color:#ffd27f;border-color:#c9a04a">🏮 中国</span>' : '') +
+        (ev.cult ? '<span class="chip" style="color:#cfe3ff;border-color:#7fa8d8">' + (D.CULTS[ev.cult] ? D.CULTS[ev.cult].name : ev.cult) + '</span>' : '') +
         '<span class="chip year">' + D.fmtAgo(ev.ago) + '</span></div>' +
       '<h2 id="panel-title">' + esc(ev.title) + '</h2>' +
       '<p id="panel-en">' + esc(ev.en) + '</p>' +

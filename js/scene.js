@@ -54,7 +54,26 @@ window.TRScene = (function () {
   const _v3 = new THREE.Vector3();            // 标签投影用临时向量
   let mmCanvas = null, mmCtx = null;          // 小地图离屏画布
   let mmScale = 1, mmOX = 0, mmOZ = 0, mmW = 340, mmH = 236;
-  let branchCurve = null;                     // 支流曲线（小地图用）
+  let mmCurves = [];                          // 全部支流曲线（小地图用）
+  /* 走廊表：丘陵自动让位（side: +1 右岸 / -1 左岸） */
+  const CORRIDORS = [
+    { side: 1, off: function (p) { return 155 + Math.sin(p * 8.5) * 38; } },   // 中国
+    { side: -1, off: function (p) { return 120 + Math.sin(p * 9) * 20; } },    // 希腊·罗马
+    { side: 1, off: function (p) { return 205 + Math.sin(p * 9) * 16; } },     // 阿拉伯·伊斯兰
+    { side: -1, off: function (p) { return 205 + Math.sin(p * 9) * 16; } }     // 印度
+  ];
+  /* 文明支流定义 */
+  const CIV_BRANCHES = [
+    { id: 'grc', name: '🏛️ 希腊·罗马支流', color: 0x7fb0e8, css: '#7fb0e8', side: -1, base: 120, wob: 20,
+      totems: ['🏛️', '🦅'],
+      gates: [['希腊城邦', 2500], ['罗马帝国', 2050]] },
+    { id: 'isl', name: '🕌 阿拉伯·伊斯兰支流', color: 0x6fd0a8, css: '#6fd0a8', side: 1, base: 205, wob: 16,
+      totems: ['🕌', '🌙'],
+      gates: [['希吉拉 · 伊斯兰纪元', 1404]] },
+    { id: 'ind', name: '🕉️ 印度支流', color: 0xe89f6f, css: '#e89f6f', side: -1, base: 205, wob: 16,
+      totems: ['🕉️', '🪷'],
+      gates: [['佛陀与佛教', 2500]] }
+  ];
   let fpsAcc = 0, fpsN = 0, prIdx = 0;        // FPS 自适应画质
   let meteors = [], meteorTimer = 0;          // 星夜流星
   let birdGroup = null, birdP = 0.05;         // 白天雁群
@@ -214,6 +233,16 @@ window.TRScene = (function () {
     return geo;
   }
 
+  function nX(p, side) {
+    const pc = Math.min(0.9999, Math.max(0.0001, p));
+    const tn = curve.getTangentAt(pc);
+    return -tn.z * side;
+  }
+  function nZ(p, side) {
+    const pc = Math.min(0.9999, Math.max(0.0001, p));
+    const tn = curve.getTangentAt(pc);
+    return tn.x * side;
+  }
   function pointOnCurve(p) {
     const pc = Math.min(0.9999, Math.max(0.0001, p));
     const pt = curve.getPointAt(pc);
@@ -369,16 +398,17 @@ window.TRScene = (function () {
       minX = Math.min(minX, pt.x); maxX = Math.max(maxX, pt.x);
       minZ = Math.min(minZ, pt.z); maxZ = Math.max(maxZ, pt.z);
     }
-    let branchSamples = null;
-    if (branchCurve) {
-      branchSamples = [];
+    const branchSets = [];
+    mmCurves.forEach(function (bc) {
+      const samples = [];
       for (let i = 0; i <= 140; i++) {
-        const pt = branchCurve.getPointAt(i / 140);
-        branchSamples.push(pt);
+        const pt = bc.curve.getPointAt(i / 140);
+        samples.push(pt);
         minX = Math.min(minX, pt.x); maxX = Math.max(maxX, pt.x);
         minZ = Math.min(minZ, pt.z); maxZ = Math.max(maxZ, pt.z);
       }
-    }
+      branchSets.push({ samples: samples, color: bc.color });
+    });
     const pad = 14;
     mmScale = Math.min((mmW - pad * 2) / (maxX - minX), (mmH - pad * 2) / (maxZ - minZ));
     mmOX = pad - minX * mmScale + ((mmW - pad * 2) - (maxX - minX) * mmScale) / 2;
@@ -407,16 +437,16 @@ window.TRScene = (function () {
     mmCtx.globalAlpha = 1;
 
     /* 支流 */
-    if (branchSamples) {
+    branchSets.forEach(function (b) {
       mmCtx.beginPath();
-      branchSamples.forEach(function (pt, k) {
+      b.samples.forEach(function (pt, k) {
         const x = mmOX + pt.x * mmScale, y = mmOZ + pt.z * mmScale;
         if (k === 0) mmCtx.moveTo(x, y); else mmCtx.lineTo(x, y);
       });
-      mmCtx.strokeStyle = '#e8b84a';
+      mmCtx.strokeStyle = b.color;
       mmCtx.lineWidth = 3.2;
       mmCtx.stroke();
-    }
+    });
 
     /* 河灯微点 */
     lanterns.forEach(function (m) {
@@ -489,11 +519,14 @@ window.TRScene = (function () {
         buildBandGeo(0, 1, 2.4, 4.3, side,
           function (p, k) {
             const t = (k - 2.4) / 1.9;
-            /* 支流走廊（与支流偏移公式一致）内压低丘陵，避免掩埋支流 */
-            const lat = k * halfWidth(p);
-            const off = 155 + Math.sin(p * 8.5) * 38;
-            const d = Math.abs(lat - off);
-            const corridor = Math.min(1, Math.max(0.05, (d - 30) / 55));
+            /* 全部支流走廊内压低丘陵，避免掩埋支流 */
+            const lat = side * k * halfWidth(p);
+            let corridor = 1;
+            CORRIDORS.forEach(function (c) {
+              if (c.side !== side) return;
+              const d = Math.abs(lat - c.off(p));
+              corridor = Math.min(corridor, Math.max(0.05, (d - 30) / 55));
+            });
             return waterYAt(p) + 2.4 + Math.pow(t, 1.25) * 15 * corridor + Math.sin(p * 57 + k * 3.1) * 1.5 * corridor;
           },
           function (p, k) { return eraCol(p, mHill * (0.85 + 0.3 * Math.sin(p * 80 + k))); }),
@@ -785,7 +818,7 @@ window.TRScene = (function () {
     }
 
     /* --- 事件河灯 --- */
-    const evs = D.EVENTS.filter(function (e) { return e.ago <= mode.span + 1 && !e.cn; })
+    const evs = D.EVENTS.filter(function (e) { return e.ago <= mode.span + 1 && !e.cn && !e.cult; })
       .slice()
       .sort(function (a, b) { return b.ago - a.ago; });
 
@@ -880,12 +913,12 @@ window.TRScene = (function () {
         const pt = curve.getPointAt(p);
         const tn = curve.getTangentAt(p);
         const n = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
-        const off = 155 + Math.sin(p * 8.5) * 38;
+        const off = CORRIDORS[0].off(p);
         pts.push(new THREE.Vector3(pt.x + n.x * off, 0, pt.z + n.z * off));
       }
       const bCurve = new THREE.CatmullRomCurve3(pts);
       bCurve.arcLengthDivisions = 600;
-      branchCurve = bCurve;
+      mmCurves.push({ curve: bCurve, color: '#e8b84a' });
       const yB = function (bp) { return waterYAt(pMin + (pMax - pMin) * bp) + 3.5; };
       const hwB = function (t) { return 8 + 15 * t; };
 
@@ -1025,6 +1058,164 @@ window.TRScene = (function () {
                         phase: (hashStr(ev.id + 'b') % 628) / 100 });
       });
     })();
+
+    /* --- 🌍 文明支流体系：希腊·罗马 / 阿拉伯·伊斯兰 / 印度 --- */
+    CIV_BRANCHES.forEach(function (def) {
+      const cnEv = D.EVENTS.filter(function (e) { return e.cult === def.id && e.ago <= mode.span + 1; });
+      if (cnEv.length < 3) return;
+      let pMin = 1, pMax = 0;
+      cnEv.forEach(function (e) {
+        const p = progressFor(e.ago);
+        pMin = Math.min(pMin, p); pMax = Math.max(pMax, p);
+      });
+      pMin = Math.max(0.01, pMin - 0.03);
+      pMax = Math.min(0.98, pMax + 0.02);
+      if (pMax - pMin < 0.04) return;
+
+      const pts = [];
+      const N = 48;
+      for (let i = 0; i <= N; i++) {
+        const p = pMin + (pMax - pMin) * (i / N);
+        const pt = curve.getPointAt(p);
+        const off = def.base + Math.sin(p * 9) * def.wob;
+        pts.push(new THREE.Vector3(pt.x + nX(p, def.side) * off, 0, pt.z + nZ(p, def.side) * off));
+      }
+      const bCurve = new THREE.CatmullRomCurve3(pts);
+      bCurve.arcLengthDivisions = 600;
+      mmCurves.push({ curve: bCurve, color: def.css });
+      const yB = function (bp) { return waterYAt(pMin + (pMax - pMin) * bp) + 3.5; };
+      const hwB = function (t) { return 7 + 12 * t; };
+
+      /* 岸带 */
+      const tmpC3 = new THREE.Color();
+      const berm = buildRibbon(0, 1,
+        function (t) { return hwB(t) * 1.6; },
+        function (t) { return yB(t) - 2.3; },
+        1,
+        function (t, side) {
+          const era = eras[eraIdxOf(agoForProgress(pMin + (pMax - pMin) * t), eras)];
+          tmpC3.set(era.color);
+          tmpC3.multiplyScalar((state.dayMode ? 0.62 : 0.26) + 0.05 * Math.sin(t * 40 + side * 3));
+          return tmpC3;
+        },
+        bCurve);
+      world.add(new THREE.Mesh(berm, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+
+      /* 水面（复用主水面着色器） */
+      const bWaterGeo = buildRibbon(0, 1,
+        function (t) { return hwB(t); },
+        function (t) { return yB(t); },
+        40,
+        function (t, side) {
+          const era = eras[eraIdxOf(agoForProgress(pMin + (pMax - pMin) * t), eras)];
+          tmpC3.set(era.color);
+          tmpC3.multiplyScalar(0.75 + 0.08 * Math.sin(t * 60 + side * 2));
+          return tmpC3;
+        },
+        bCurve);
+      world.add(new THREE.Mesh(bWaterGeo, waterMat));
+
+      /* 名牌 + 首尾图腾 + 里程碑拱门 */
+      const midPt = bCurve.getPointAt(0.5);
+      const blabel = TEX.makeTextSprite(def.name, def.totems[0] + ' ' + cnEv.length + ' 盏河灯', '#ffffff', { fontSize: 46 });
+      blabel.scale.set(30, 30 / blabel.userData.aspect, 1);
+      blabel.position.set(midPt.x, yB(0.5) + 26, midPt.z);
+      world.add(blabel);
+
+      [[def.totems[0], 0.03], [def.totems[1], 0.97]].forEach(function (cfg) {
+        const tp = bCurve.getPointAt(cfg[1]);
+        const ts = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: TEX.makeEmojiTexture(cfg[0], 256), transparent: true, depthWrite: false
+        }));
+        ts.scale.set(26, 26, 1);
+        ts.position.set(tp.x, yB(cfg[1]) + 13, tp.z);
+        world.add(ts);
+      });
+
+      def.gates.forEach(function (gt) {
+        const bpD = (progressFor(gt[1]) - pMin) / (pMax - pMin);
+        if (bpD < 0.05 || bpD > 0.95) return;
+        const gp = bCurve.getPointAt(bpD);
+        const gt2 = bCurve.getTangentAt(bpD);
+        const R = hwB(bpD) * 1.2 + 2;
+        const arch = new THREE.Mesh(
+          new THREE.TorusGeometry(R, 0.95, 8, 24, Math.PI),
+          new THREE.MeshLambertMaterial({ color: def.color })
+        );
+        arch.position.set(gp.x, yB(bpD) - 1.4, gp.z);
+        arch.rotation.y = Math.atan2(gt2.x, gt2.z);
+        world.add(arch);
+        const lb = TEX.makeTextSprite(gt[0], null, '#ffffff', { fontSize: 38 });
+        lb.scale.set(10, 10 / lb.userData.aspect, 1);
+        lb.position.set(gp.x, yB(bpD) - 1.4 + R + 3, gp.z);
+        world.add(lb);
+      });
+
+      /* 河灯 */
+      cnEv.forEach(function (ev, i) {
+        const cat = D.CATS[ev.cat];
+        const bp = Math.min(0.92, Math.max(0.08, (progressFor(ev.ago) - pMin) / (pMax - pMin)));
+        const pt = bCurve.getPointAt(bp);
+        const tn = bCurve.getTangentAt(bp);
+        const n = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
+        const h2 = hashStr(ev.id);
+        const lat = hwB(bp) * (0.2 + (h2 % 25) / 100);
+        const size = ev.imp >= 3 ? 28 : 20;
+        const g = new THREE.Group();
+        g.position.set(pt.x + n.x * lat, yB(bp) + 1.4, pt.z + n.z * lat);
+
+        const pool = new THREE.Mesh(
+          new THREE.CircleGeometry(1, 22),
+          new THREE.MeshBasicMaterial({
+            map: glowTex, color: cat.color, transparent: true, opacity: 0.4,
+            blending: THREE.AdditiveBlending, depthWrite: false
+          }));
+        pool.rotation.x = -Math.PI / 2;
+        pool.scale.setScalar(size * 0.75);
+        pool.position.y = -0.7;
+        g.add(pool);
+
+        const boat = new THREE.Mesh(
+          new THREE.CylinderGeometry(3.4, 4.2, 1.4, 10),
+          new THREE.MeshLambertMaterial({ color: 0x4a3418 })
+        );
+        boat.scale.y = 0.7;
+        boat.position.y = -0.6;
+        g.add(boat);
+
+        const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: glowTex, color: cat.color, transparent: true, opacity: 0.85,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        glow.position.y = 3.2;
+        glow.scale.setScalar(size);
+        glow.userData = { type: 'event', id: ev.id };
+        g.add(glow);
+
+        const flame = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: glowTex, color: 0xfff8e8, transparent: true, opacity: 0.95,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        }));
+        flame.position.y = 3.2;
+        flame.scale.setScalar(size * 0.3);
+        flame.userData = { type: 'event', id: ev.id };
+        g.add(flame);
+
+        let label = null;
+        if (ev.imp >= 3) {
+          label = TEX.makeTextSprite(ev.title, null, cat.color, { fontSize: 50 });
+          label.scale.set(15, 15 / label.userData.aspect, 1);
+          label.position.y = size * 0.7 + 6.5;
+          label.userData = { type: 'event', id: ev.id };
+          g.add(label);
+        }
+
+        world.add(g);
+        lanterns.push({ ev: ev, group: g, glow: glow, label: label,
+                        p: progressFor(ev.ago), size: size, eraIdx: eraIdxOf(ev.ago, eras),
+                        phase: (hashStr(ev.id + 'c') % 628) / 100 });
+      });
+    });
 
     /* --- 顺流流光粒子（奔流感） --- */
     flowDrops = [];
