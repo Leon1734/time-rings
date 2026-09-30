@@ -65,6 +65,7 @@
     <div id="hud-year">138亿年前</div>
     <div id="hud-sub">🎬 准备从源头起飞……</div>
     <div id="hud-progress"><i></i></div>
+    <div id="hud-preview" class="hidden"></div>
   </div>
 
   <!-- 移动端面板开关 -->
@@ -77,6 +78,19 @@
       <button data-mode="deep" class="on" title="138亿年，对数河道：每段数量级等长">深时全景</button>
       <button data-mode="civ" title="1.2万年，线性河道：看文明史">文明时代</button>
       <button data-mode="modern" title="650年，线性河道：看近现代">近现代</button>
+    </div>
+
+    <h3>🎓 教学路线</h3>
+    <div id="tour-list"></div>
+    <div id="tour-player" class="hidden">
+      <div id="tour-title"></div>
+      <div id="tour-stepnum"></div>
+      <div id="tour-ctrl">
+        <button id="btn-tour-prev" title="上一站">◀</button>
+        <button id="btn-tour-auto" title="自动播放：每站停留 9 秒">▶ 自动</button>
+        <button id="btn-tour-next" title="下一站">▶</button>
+      </div>
+      <button id="btn-tour-exit" title="退出路线">✕ 退出路线</button>
     </div>
 
     <h3>🗓 纪元年表 · 点击飞往</h3>
@@ -181,9 +195,9 @@
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>
-  <script src="js/data.js?v=river14"></script>
-  <script src="js/textures.js?v=river14"></script>
-  <script src="js/scene.js?v=river14"></script>
-  <script src="js/app.js?v=river14"></script>
+  <script src="js/data.js?v=river15"></script>
+  <script src="js/textures.js?v=river15"></script>
+  <script src="js/scene.js?v=river15"></script>
+  <script src="js/app.js?v=river15"></script>
 </body>
 </html>

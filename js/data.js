@@ -672,6 +672,29 @@ window.TR_DATA = (function () {
     { id: "seed-097", cat: 'art', ago: 75026, imp: 1, title: "布隆伯斯刻纹", en: "Blombos Cave Engraving", desc: "南非布隆伯斯洞穴的赭石上刻着规则的交叉几何纹——人类最早的\"抽象画\"之一。", facts: ["这块4厘米的小石头，藏着\"设计感\"的起源", "同洞穴还发现早期颜料作坊"] },
   ];
 
+  /* ================= 🎓 教学路线（导学） =================
+   * steps 为事件 id 序列；播放器自动飞往每站并打开档案卡 */
+  const TOURS = [
+    {
+      id: 'china', icon: '🐉', name: '中华文明五千年',
+      desc: '从二里头宫城到新中国，沿中国支流走一遍中华史的主干',
+      steps: ['seed-045', 'seed-047', 'seed-049', 'seed-052', 'seed-056', 'seed-060',
+              'seed-062', 'seed-063', 'seed-113', 'industrial-015', 'modern-023']
+    },
+    {
+      id: 'science', icon: '🔬', name: '科学的历程',
+      desc: '从日心说到引力波照片：人类如何一步步读懂宇宙与自己',
+      steps: ['seed-069', 'seed-070', 'seed-071', 'seed-072', 'seed-074', 'seed-079',
+              'seed-081', 'seed-082', 'seed-084', 'seed-087', 'seed-090', 'seed-123']
+    },
+    {
+      id: 'origin', icon: '🌌', name: '宇宙·地球·生命',
+      desc: '大爆炸到文字发明：138亿年里"我们"如何登场',
+      steps: ['seed-001', 'seed-003', 'seed-008', 'seed-007', 'seed-014', 'seed-010',
+              'seed-017', 'seed-012', 'seed-031', 'seed-036', 'seed-040', 'seed-043']
+    }
+  ];
+
   /* ================= 时代图腾（岸边大形象） =================
    * 按纪元名关键词匹配 emoji；顺序敏感（具体词在前） */
   const ERA_EMOJI = [
@@ -840,7 +863,7 @@ window.TR_DATA = (function () {
     NOW_YEAR: NOW_YEAR, T_UNIVERSE: T_UNIVERSE,
     CATS: CATS, MODES: MODES, ERAS: ERAS, EVENTS: EVENTS,
     TIPS: TIPS, SCIENCE: SCIENCE, HELP: HELP,
-    eraEmoji: eraEmoji, CAT_EMOJI: CAT_EMOJI,
+    eraEmoji: eraEmoji, CAT_EMOJI: CAT_EMOJI, TOURS: TOURS,
     fmtAgo: fmtAgo, cosmicDate: cosmicDate, COSMIC_SEC_YEARS: COSMIC_SEC_YEARS
   };
 })();

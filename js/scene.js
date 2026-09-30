@@ -1577,6 +1577,16 @@ window.TRScene = (function () {
       return D.EVENTS.filter(function (e) { return e.ago <= span + 1; });
     },
     progressOf: function (ago) { return progressFor(ago); },
+    /* 航程 p 处的年份与最近河灯（进度条实时预览用） */
+    nearestAt: function (p) {
+      const ago = agoForProgress(p);
+      let best = null, bd = 1e9;
+      lanterns.forEach(function (m) {
+        const d = Math.abs(m.p - p);
+        if (d < bd) { bd = d; best = m; }
+      });
+      return { ago: ago, title: best ? best.ev.title : null };
+    },
     isReady: function () { return !!renderer; },
     resize: function () { onResize(); },
     getMinimap: function () { return mmCanvas ? { canvas: mmCanvas, map: mmMap, unmap: mmUnmap } : null; },

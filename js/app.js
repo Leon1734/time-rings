@@ -294,6 +294,64 @@
     } catch (e) {}
   }
 
+  /* ================= 🎓 教学路线 ================= */
+  let tour = null, tourIdx = 0, tourAuto = null;
+  function buildTourList() {
+    const box = $('tour-list');
+    box.innerHTML = '';
+    D.TOURS.forEach(function (t) {
+      const el = document.createElement('button');
+      el.className = 'tour-item';
+      el.innerHTML = '<span>' + t.icon + ' ' + esc(t.name) + '</span><b>' + t.steps.length + ' 站</b>';
+      el.title = t.desc;
+      el.addEventListener('click', function () { startTour(t); });
+      box.appendChild(el);
+    });
+  }
+  function startTour(t) {
+    tour = t;
+    tourIdx = 0;
+    $('tour-player').classList.remove('hidden');
+    stopTourAuto();
+    gotoTourStep(0);
+  }
+  function gotoTourStep(i) {
+    if (!tour) return;
+    tourIdx = Math.max(0, Math.min(tour.steps.length - 1, i));
+    const ev = eventById(tour.steps[tourIdx]);
+    if (!ev) return;
+    $('tour-title').textContent = tour.icon + ' ' + tour.name;
+    $('tour-stepnum').textContent = '第 ' + (tourIdx + 1) + ' / ' + tour.steps.length + ' 站 · ' + D.fmtAgo(ev.ago);
+    pluck(560 + (tourIdx % 5) * 60, 0.1, 0.035);
+    S.selectEvent(ev.id, true);
+    speak('第' + (tourIdx + 1) + '站，' + ev.title + '。' + firstSentence(ev.desc), true);
+    if (tourAuto && tourIdx >= tour.steps.length - 1) stopTourAuto();   // 末站停自动
+  }
+  function stopTourAuto() {
+    if (tourAuto) { clearInterval(tourAuto); tourAuto = null; }
+    const b = $('btn-tour-auto');
+    if (b) { b.classList.remove('on'); b.textContent = '▶ 自动'; }
+  }
+  $('btn-tour-prev').addEventListener('click', function () { stopTourAuto(); gotoTourStep(tourIdx - 1); });
+  $('btn-tour-next').addEventListener('click', function () { stopTourAuto(); gotoTourStep(tourIdx + 1); });
+  $('btn-tour-auto').addEventListener('click', function () {
+    if (tourAuto) { stopTourAuto(); return; }
+    this.classList.add('on');
+    this.textContent = '⏸ 自动中';
+    tourAuto = setInterval(function () {
+      if (!tour) { stopTourAuto(); return; }
+      if (tourIdx >= tour.steps.length - 1) { stopTourAuto(); return; }
+      gotoTourStep(tourIdx + 1);
+    }, 9000);
+  });
+  $('btn-tour-exit').addEventListener('click', function () {
+    stopTourAuto();
+    tour = null;
+    $('tour-player').classList.add('hidden');
+    $('detail-panel').classList.add('hidden');
+    S.clearSelection();
+  });
+
   /* ================= 🗺 小地图 ================= */
   function drawMinimap() {
     const mm = S.getMinimap();
@@ -677,10 +735,23 @@
   /* ================= 进度条拖动跳转（像视频一样） ================= */
   const progBar = $('hud-progress');
   let scrubbing = false;
-  function scrubTo(e) {
+  function progXtoP(e) {
     const r = progBar.getBoundingClientRect();
+    return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+  }
+  /* 悬停/拖动时显示"年份 · 最近河灯"预览 */
+  function showPreview(e) {
+    const p = progXtoP(e);
+    const info = S.nearestAt(p);
+    const el = $('hud-preview');
+    el.innerHTML = '<b>' + D.fmtAgo(info.ago) + '</b>' +
+      (info.title ? ' · ' + esc(info.title) : '');
+    el.style.left = Math.max(70, Math.min(e.clientX, window.innerWidth - 70)) + 'px';
+    el.classList.remove('hidden');
+  }
+  function scrubTo(e) {
     lastEraSpoken = -1;
-    S.seek(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)));
+    S.seek(progXtoP(e));
     syncButtons();
   }
   progBar.addEventListener('pointerdown', function (e) {
@@ -688,8 +759,18 @@
     try { progBar.setPointerCapture(e.pointerId); } catch (err) {}
     scrubTo(e);
   });
-  progBar.addEventListener('pointermove', function (e) { if (scrubbing) scrubTo(e); });
+  progBar.addEventListener('pointermove', function (e) {
+    showPreview(e);
+    if (scrubbing) scrubTo(e);
+  });
   progBar.addEventListener('pointerup', function () { scrubbing = false; });
+  progBar.addEventListener('pointerleave', function () {
+    if (!scrubbing) $('hud-preview').classList.add('hidden');
+  });
+  window.addEventListener('pointerup', function () {
+    scrubbing = false;
+    $('hud-preview').classList.add('hidden');
+  });
 
   /* ================= 悬停提示 ================= */
   S.onHover(function (h) {
@@ -1151,6 +1232,7 @@
   /* ================= 启动 ================= */
   window.addEventListener('DOMContentLoaded', function () {
     buildEraNav();
+    buildTourList();
     buildLegend();
     buildScience(); buildHelp();
     $('hud-sub').textContent = modeSub();
