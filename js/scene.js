@@ -56,6 +56,8 @@ window.TRScene = (function () {
   let mmScale = 1, mmOX = 0, mmOZ = 0, mmW = 340, mmH = 236;
   let branchCurve = null;                     // 支流曲线（小地图用）
   let fpsAcc = 0, fpsN = 0, prIdx = 0;        // FPS 自适应画质
+  let meteors = [], meteorTimer = 0;          // 星夜流星
+  let birdGroup = null, birdP = 0.05;         // 白天雁群
   let PR_LEVELS = [1.5, 1.25, 1];
   let glowTex, starTex;
   let beacon = null, beaconT = 0;
@@ -319,6 +321,34 @@ window.TRScene = (function () {
     skyNeb.scale.set(2400, 540, 1);
     skyNeb.visible = !state.dayMode;
     scene.add(skyNeb);
+
+    /* --- 🌠 流星池（星夜偶发划落） --- */
+    meteors = [];
+    for (let i = 0; i < 3; i++) {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+      const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+        color: 0xdce8ff, transparent: true, opacity: 0,
+        blending: THREE.AdditiveBlending, depthWrite: false, fog: false
+      }));
+      line.visible = false;
+      line.userData = { life: 0, vel: new THREE.Vector3(), head: new THREE.Vector3() };
+      scene.add(line);
+      meteors.push(line);
+    }
+
+    /* --- 🦅 雁群（白天沿河飞行） --- */
+    birdGroup = new THREE.Group();
+    for (let i = 0; i < 3; i++) {
+      const b = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: TEX.makeEmojiTexture('🦅', 128), transparent: true, depthWrite: false
+      }));
+      b.scale.set(9, 9, 1);
+      b.userData = { off: (i - 1) * 16, lag: i * 0.006 };
+      birdGroup.add(b);
+    }
+    birdGroup.visible = state.dayMode;
+    scene.add(birdGroup);
   }
   function RIVER_LEN_X() { return 2400; }
 
@@ -1172,11 +1202,56 @@ window.TRScene = (function () {
       });
 
       /* 流云漂移 */
-      const ts = now / 1000;
+      const ts2 = now / 1000;
       clouds.forEach(function (c) {
-        c.s.position.x += Math.sin(ts * 0.015 + c.ph) * dt * 2.2;
-        c.s.position.y = c.y + Math.sin(ts * 0.02 + c.ph) * 3;
+        c.s.position.x += Math.sin(ts2 * 0.015 + c.ph) * dt * 2.2;
+        c.s.position.y = c.y + Math.sin(ts2 * 0.02 + c.ph) * 3;
       });
+
+      /* 🌠 流星：随机生成、划落后熄灭（仅星夜） */
+      meteorTimer -= dt;
+      if (!state.dayMode && meteorTimer <= 0) {
+        meteorTimer = 6 + Math.random() * 9;
+        const free = meteors.filter(function (m) { return !m.visible; })[0];
+        if (free) {
+          const u = free.userData;
+          u.head.set(300 + Math.random() * 1800, 420 + Math.random() * 260, -700 + Math.random() * 1200);
+          u.vel.set(-260 - Math.random() * 160, -120 - Math.random() * 60, 60).multiplyScalar(0.9);
+          u.life = 1.15;
+          free.visible = true;
+        }
+      }
+      meteors.forEach(function (m) {
+        if (!m.visible) return;
+        const u = m.userData;
+        u.life -= dt;
+        if (u.life <= 0) { m.visible = false; return; }
+        u.head.addScaledVector(u.vel, dt);
+        const arr = m.geometry.attributes.position.array;
+        arr[0] = u.head.x; arr[1] = u.head.y; arr[2] = u.head.z;
+        arr[3] = u.head.x - u.vel.x * 0.22; arr[4] = u.head.y - u.vel.y * 0.22; arr[5] = u.head.z - u.vel.z * 0.22;
+        m.geometry.attributes.position.needsUpdate = true;
+        m.material.opacity = Math.min(1, u.life) * 0.85;
+      });
+
+      /* 🦅 雁群：白天沿河缓缓飞行（循环） */
+      if (birdGroup) {
+        birdGroup.visible = state.dayMode;
+        if (state.dayMode) {
+          birdP += dt * 0.004;
+          if (birdP > 0.98) birdP = 0.02;
+          const bt = birdP;
+          const bp = pointOnCurve(bt);
+          birdGroup.position.set(bp.x, waterYAt(bt) + 74 + Math.sin(ts2 * 2.1) * 3, bp.z);
+          birdGroup.children.forEach(function (b, i) {
+            const bp2 = pointOnCurve(Math.min(0.999, bt + b.userData.lag));
+            b.position.set(bp2.x - bp.x + b.userData.off * 0.2,
+                           b.userData.off * 0.55 + Math.sin(ts2 * 5 + i) * 1.2,
+                           bp2.z - bp.z);
+            b.scale.set(9, 9 * (0.82 + 0.18 * Math.abs(Math.sin(ts2 * 6 + i))), 1);
+          });
+        }
+      }
 
       /* FPS 自适应画质：帧时长过长逐级降 pixelRatio，流畅则恢复 */
       fpsAcc += dt; fpsN++;

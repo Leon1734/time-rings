@@ -264,6 +264,7 @@
     exploredN++;
     try { localStorage.setItem('tr-explored', JSON.stringify(explored)); } catch (e) {}
     updateExplored();
+    updateLegendCounts();
     checkAchievements();
     return true;
   }
@@ -943,6 +944,7 @@
       '<h2 id="panel-title">' + esc(era.name) + '</h2>' +
       '<p id="panel-en">' + D.fmtAgo(era.from) + ' ～ ' + (era.to <= 0 ? '今天' : D.fmtAgo(era.to)) + '</p>' +
       '<p class="desc">' + esc(era.blurb) + '</p>' +
+      (era.long ? '<h3>📖 深度解读</h3><p class="desc long-text">' + esc(era.long) + '</p>' : '') +
       '<h3>📍 该河段的河灯（' + evs.length + '）</h3><div class="near">' +
       (evs.length ? evs.map(function (e) {
         return '<button class="chip link" data-goto="' + e.id + '">' +
@@ -983,24 +985,39 @@
   }
 
   /* ================= 类别图例 ================= */
+  let legendEls = {};
   function buildLegend() {
     const box = $('legend');
     box.innerHTML = '';
+    legendEls = {};
     Object.keys(D.CATS).forEach(function (k) {
       const c = D.CATS[k];
-      const n = S.eventsInMode().filter(function (e) { return e.cat === k; }).length;
       const el = document.createElement('button');
       el.className = 'legend-item on';
       el.style.setProperty('--c', c.color);
-      el.innerHTML = '<i></i>' + c.icon + ' ' + c.name + '<b>' + n + '</b>';
+      el.innerHTML = '<i></i>' + c.icon + ' ' + c.name + '<b></b>';
       el.addEventListener('click', function () {
         const on = !el.classList.contains('on');
         el.classList.toggle('on', on);
         S.setCategory(k, on);
       });
       box.appendChild(el);
+      legendEls[k] = el.querySelector('b');
     });
-    refreshCounts();
+    updateLegendCounts();
+  }
+  /* 图例数字 = "已探索/总数"（点亮过的事件计入） */
+  function updateLegendCounts() {
+    const explored = getExplored();
+    Object.keys(D.CATS).forEach(function (k) {
+      if (!legendEls[k]) return;
+      const evs = S.eventsInMode().filter(function (e) { return e.cat === k; });
+      const done = evs.filter(function (e) { return explored[e.id]; }).length;
+      legendEls[k].textContent = done + '/' + evs.length;
+    });
+  }
+  function getExplored() {
+    try { return JSON.parse(localStorage.getItem('tr-explored') || '{}'); } catch (e) { return {}; }
   }
   function refreshCounts() {
     $('ev-count').textContent = S.eventsInMode().length + ' 盏河灯';

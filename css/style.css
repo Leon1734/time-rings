@@ -543,3 +543,12 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 #hud-preview b { color: var(--gold); }
 #hud-preview.hidden { display: none; }
 #hud { position: relative; }
+
+
+/* 深度解读排版 */
+#panel-body .desc.long-text {
+  line-height: 1.95; color: #ddd6c8; text-align: justify;
+  padding: 10px 12px; border-radius: 8px;
+  background: rgba(255,210,127,0.05); border-left: 2px solid rgba(255,210,127,0.4);
+}
+.legend-item b { letter-spacing: .5px; }
