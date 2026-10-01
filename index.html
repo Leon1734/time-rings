@@ -65,6 +65,21 @@
     </div>
   </div>
 
+  <!-- 首次引导 -->
+  <div id="onboard" class="hidden">
+    <div class="onboard-card">
+      <h2>🏞️ 欢迎来到滚滚长河</h2>
+      <p class="onboard-sub">一条奔流 138 亿年的大河 · 你是执灯的旅人</p>
+      <ul>
+        <li><b>🎬</b> 点「飞览全程」，镜头带你从大爆炸顺流到今天</li>
+        <li><b>💡</b> 河灯即历史事件，单击查看档案；点错不心疼</li>
+        <li><b>🖱️</b> 拖拽环绕 · 滚轮缩放 · 按住空格+拖拽平移</li>
+        <li><b>🏆</b> 玩「问答」测测历史感，点亮全部 576 盏河灯</li>
+      </ul>
+      <button id="btn-onboard-go">🌊 开始探索</button>
+    </div>
+  </div>
+
   <!-- 年份 HUD -->
   <div id="hud">
     <div id="hud-year">138亿年前</div>
@@ -111,6 +126,7 @@
     <div id="legend"></div>
     <div id="ev-count">—</div>
     <div id="explored">🧭 已探索 0 个事件</div>
+    <canvas id="rings-canvas" width="204" height="54"></canvas>
     <button id="today-lantern" class="hidden" title="点击直达这盏河灯">🌟 今日之灯</button>
 
     <h3>👁 显示</h3>
@@ -200,9 +216,9 @@
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>
-  <script src="js/data.js?v=river19b"></script>
-  <script src="js/textures.js?v=river19b"></script>
-  <script src="js/scene.js?v=river19b"></script>
-  <script src="js/app.js?v=river19b"></script>
+  <script src="js/data.js?v=river20b"></script>
+  <script src="js/textures.js?v=river20b"></script>
+  <script src="js/scene.js?v=river20b"></script>
+  <script src="js/app.js?v=river20b"></script>
 </body>
 </html>

@@ -265,6 +265,7 @@
     try { localStorage.setItem('tr-explored', JSON.stringify(explored)); } catch (e) {}
     updateExplored();
     updateLegendCounts();
+    drawRings();
     checkAchievements();
     return true;
   }
@@ -1216,6 +1217,39 @@
     }
   });
 
+  /* ================= 📊 探索六环统计 ================= */
+  function drawRings() {
+    const cv = document.getElementById('rings-canvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const explored = getExplored();
+    const cats = Object.keys(D.CATS);
+    const r = 21, gap = 34, cy = 27;
+    cats.forEach(function (k, i) {
+      const evs = D.EVENTS.filter(function (e) { return e.cat === k; });
+      const done = evs.filter(function (e) { return explored[e.id]; }).length;
+      const cx = 25 + i * gap;
+      const pct = evs.length ? done / evs.length : 0;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = D.CATS[k].color;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + pct * Math.PI * 2);
+      ctx.stroke();
+      ctx.font = '11px "Segoe UI Emoji","Microsoft YaHei"';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#e8e2d4';
+      ctx.fillText(D.CATS[k].icon, cx, cy + 1);
+      cv.title = cats.map(function (kk) {
+        const ee = D.EVENTS.filter(function (e) { return e.cat === kk; });
+        const dd = ee.filter(function (e) { return explored[e.id]; }).length;
+        return D.CATS[kk].icon + ' ' + D.CATS[kk].name + ' ' + dd + '/' + ee.length;
+      }).join(' · ');
+    });
+  }
+
   /* ================= 🌟 今日之灯 ================= */
   function setupTodayLantern() {
     const d = new Date();
@@ -1316,8 +1350,21 @@
     $('hud-sub').textContent = modeSub();
     syncButtons();
     updateExplored();
+    drawRings();
     setupTodayLantern();
     restorePrefs();
+    /* 首次访问：引导浮层 */
+    try {
+      if (!localStorage.getItem('tr-onboard')) {
+        $('onboard').classList.remove('hidden');
+      }
+    } catch (e) {}
+    $('btn-onboard-go').addEventListener('click', function () {
+      $('onboard').classList.add('hidden');
+      try { localStorage.setItem('tr-onboard', '1'); } catch (e) {}
+      pluck(660, 0.12, 0.05);
+      setTimeout(function () { pluck(880, 0.16, 0.05); }, 120);
+    });
     applyHash();        // 解析分享链接（#m=模式&e=事件），有事件定位则不自动起飞
     /* PWA：https/localhost 下注册 Service Worker（离线可玩、可安装） */
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

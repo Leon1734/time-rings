@@ -553,3 +553,36 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   background: rgba(255,210,127,0.05); border-left: 2px solid rgba(255,210,127,0.4);
 }
 .legend-item b { letter-spacing: .5px; }
+
+
+/* ================= 首次引导 ================= */
+#onboard {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(2,4,10,0.82); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+}
+#onboard.hidden { display: none; }
+.onboard-card {
+  width: min(440px, 88vw); text-align: center;
+  background: linear-gradient(160deg, #101828, #0a0f1c);
+  border: 1px solid rgba(255,210,127,0.4); border-radius: 18px;
+  padding: 30px 30px 26px; box-shadow: 0 0 60px rgba(255,190,90,0.18);
+  animation: obPop .5s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes obPop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
+.onboard-card h2 { color: var(--gold); font-size: 22px; margin-bottom: 6px; }
+.onboard-sub { font-size: 12.5px; color: var(--dim); margin-bottom: 18px; }
+.onboard-card ul { list-style: none; text-align: left; margin-bottom: 20px; }
+.onboard-card li {
+  font-size: 13px; color: #d8d2c6; line-height: 1.6;
+  padding: 8px 0 8px 4px; border-bottom: 1px dashed rgba(255,255,255,0.08);
+}
+.onboard-card li b { color: var(--gold); margin-right: 8px; }
+#btn-onboard-go {
+  width: 100%; padding: 12px; font-size: 15px; font-weight: 700;
+  color: #1a1408; background: linear-gradient(90deg, #ffd27f, #ff9d5c);
+  border: none; border-radius: 12px; cursor: pointer; transition: all .15s;
+}
+#btn-onboard-go:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,180,80,0.35); }
+
+#rings-canvas { display: block; margin-top: 8px; width: 204px; height: 54px; }
