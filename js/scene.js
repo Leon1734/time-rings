@@ -76,6 +76,7 @@ window.TRScene = (function () {
   ];
   let fpsAcc = 0, fpsN = 0, prIdx = 0;        // FPS 自适应画质
   let meteors = [], meteorTimer = 0;          // 星夜流星
+  let birthMarker = null, birthLabel = null;  // 时光机：出生时刻标记
   let birdGroup = null, birdP = 0.05;         // 白天雁群
   let PR_LEVELS = [1.5, 1.25, 1];
   let glowTex, starTex;
@@ -1232,6 +1233,7 @@ window.TRScene = (function () {
     }));
     world.add(flowPts);
 
+    birthMarker = null; birthLabel = null;   // 重建后清除出生标记
     buildMinimap();          // 生成小地图底图（含全部河灯微点）
     scene.add(world);
     state.selected = null;
@@ -1488,6 +1490,11 @@ window.TRScene = (function () {
       lanterns.forEach(function (m) { if (m.label) m.label.visible = false; });
     }
 
+    /* 🎂 出生时刻白环脉动 */
+    if (birthMarker) {
+      birthMarker.scale.setScalar(1 + 0.16 * Math.sin(now / 280));
+    }
+
     /* 定位光环 */
     if (beacon) {
       beaconT += dt;
@@ -1717,6 +1724,29 @@ window.TRScene = (function () {
     if (cb.onSelect) cb.onSelect({ type: 'event', id: id });
   }
 
+  /* 🎂 时光机：在"你出生那年"的河段放置白色标记环 */
+  function setBirthMarker(ago, text) {
+    if (birthMarker) { world.remove(birthMarker); birthMarker.geometry.dispose(); birthMarker.material.dispose(); birthMarker = null; }
+    if (birthLabel) { world.remove(birthLabel); birthLabel.material.dispose(); birthLabel = null; }
+    if (ago == null) return;
+    const p = Math.min(0.998, Math.max(0.002, progressFor(ago)));
+    const pt = pointOnCurve(p);
+    birthMarker = new THREE.Mesh(
+      new THREE.RingGeometry(2.6, 3.1, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0.95,
+        side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false
+      })
+    );
+    birthMarker.rotation.x = -Math.PI / 2;
+    birthMarker.position.set(pt.x, waterYAt(p) + 0.5, pt.z);
+    world.add(birthMarker);
+    birthLabel = TEX.makeTextSprite(text, null, '#ffffff', { fontSize: 44 });
+    birthLabel.scale.set(15, 15 / birthLabel.userData.aspect, 1);
+    birthLabel.position.set(pt.x, waterYAt(p) + 13, pt.z);
+    world.add(birthLabel);
+  }
+
   function focusEra(idx) {
     const era = D.ERAS[state.mode][idx];
     if (!era) return;
@@ -1820,6 +1850,8 @@ window.TRScene = (function () {
     setQuiz: setQuiz,
     seek: seek,
     nudge: nudge,
+    flyToProgress: jumpToProgress,
+    setBirthMarker: setBirthMarker,
     toggleOverview: function () {
       setOverview(state.camMode !== 'overview');
       return state.camMode === 'overview';

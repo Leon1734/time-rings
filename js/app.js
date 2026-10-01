@@ -1327,6 +1327,49 @@
     });
   }
 
+  /* ================= 🎂 时光机 ================= */
+  function birthNearestEvent(ago) {
+    const p0 = S.progressOf(ago);
+    let best = null, bd = 1e9;
+    S.eventsInMode().forEach(function (e) {
+      const d = Math.abs(S.progressOf(e.ago) - p0);
+      if (d < bd) { bd = d; best = e; }
+    });
+    return best;
+  }
+  function launchBirth(year) {
+    year = Math.max(1900, Math.min(2026, Math.round(year)));
+    try { localStorage.setItem('tr-birth', String(year)); } catch (e) {}
+    const ago = Math.max(1, 2026 - year);
+    S.setBirthMarker(ago, '🎂 你出生时 · ' + year + ' 年');
+    S.flyToProgress(S.progressOf(ago));
+    syncButtons();
+    const ev = birthNearestEvent(ago);
+    if (ev) {
+      setTimeout(function () {
+        S.selectEvent(ev.id, false);
+        showAchievement('🎂', year + ' 年 · 你出生时的世界',
+          '你出生在 138 亿年长河的最后 ' + ago + ' 年 · 那年河上最近的事件：「' + ev.title + '」');
+      }, 900);
+    }
+  }
+  $('btn-birth').addEventListener('click', function () {
+    let saved = '';
+    try { saved = localStorage.getItem('tr-birth') || ''; } catch (e) {}
+    document.getElementById('birth-year').value = saved;
+    document.getElementById('modal-birth').classList.remove('hidden');
+  });
+  $('btn-birth-go').addEventListener('click', function () {
+    const v = parseInt(document.getElementById('birth-year').value, 10);
+    if (!v || v < 1900 || v > 2026) {
+      document.getElementById('birth-year').focus();
+      return;
+    }
+    document.getElementById('modal-birth').classList.add('hidden');
+    pluck(660, 0.12, 0.05);
+    launchBirth(v);
+  });
+
   /* ================= 底部小知识滚动 ================= */
   let tipIdx = Math.floor(Math.random() * D.TIPS.length);
   function showTip() {

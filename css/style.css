@@ -595,3 +595,12 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 }
 #atlas-views button.on { color: var(--gold); border-color: rgba(255,210,127,0.5); background: rgba(255,210,127,0.1); }
 #btn-atlas-star.on { color: #ffd27f; border-color: rgba(255,210,127,0.6); background: rgba(255,210,127,0.14); }
+
+#btn-birth {
+  display: block; width: 100%; margin-top: 6px; text-align: left;
+  font-size: 12px; padding: 8px 10px; cursor: pointer;
+  background: linear-gradient(135deg, rgba(180,200,255,0.12), rgba(255,210,127,0.06));
+  border: 1px solid rgba(180,200,255,0.3); border-radius: 8px; color: var(--text);
+  transition: all .15s;
+}
+#btn-birth:hover { border-color: #bcd0ff; transform: translateY(-1px); }

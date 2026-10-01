@@ -128,6 +128,7 @@
     <div id="explored">🧭 已探索 0 个事件</div>
     <canvas id="rings-canvas" width="204" height="54"></canvas>
     <button id="today-lantern" class="hidden" title="点击直达这盏河灯">🌟 今日之灯</button>
+    <button id="btn-birth" title="输入出生年份，看看那年河上的世界">🎂 时光机 · 你出生那年</button>
 
     <h3>👁 显示</h3>
     <label class="toggle"><input type="checkbox" id="tg-labels" checked>纪元 / 河灯标签</label>
@@ -208,6 +209,19 @@
     </div>
   </div>
 
+  <!-- 时光机 -->
+  <div class="modal hidden" id="modal-birth">
+    <div class="modal-card" style="width:min(420px,90vw); text-align:center;">
+      <button class="modal-close">✕</button>
+      <h2>🎂 时光机</h2>
+      <p class="src-note" style="margin-bottom:14px;">输入你的出生年份，镜头将飞到那年的河段，替你点亮一枚白环——看看你出生时，世界正发生什么。</p>
+      <input type="number" id="birth-year" min="1900" max="2026" placeholder="如 1990" style="width:130px; padding:10px; font-size:16px; text-align:center; background:rgba(255,255,255,0.06); color:var(--text); border:1px solid rgba(255,255,255,0.15); border-radius:10px; outline:none;">
+      <div style="margin-top:16px;">
+        <button id="btn-birth-go" style="padding:10px 26px; font-size:14px; font-weight:700; color:#1a1408; background:linear-gradient(90deg,#ffd27f,#ff9d5c); border:none; border-radius:10px; cursor:pointer;">🚀 出发</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 帮助 -->
   <div class="modal hidden" id="modal-help">
     <div class="modal-card">
@@ -221,9 +235,9 @@
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>
-  <script src="js/data.js?v=river21c"></script>
-  <script src="js/textures.js?v=river21c"></script>
-  <script src="js/scene.js?v=river21c"></script>
-  <script src="js/app.js?v=river21c"></script>
+  <script src="js/data.js?v=river22b"></script>
+  <script src="js/textures.js?v=river22b"></script>
+  <script src="js/scene.js?v=river22b"></script>
+  <script src="js/app.js?v=river22b"></script>
 </body>
 </html>
