@@ -586,3 +586,12 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 #btn-onboard-go:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,180,80,0.35); }
 
 #rings-canvas { display: block; margin-top: 8px; width: 204px; height: 54px; }
+
+#atlas-views { display: flex; gap: 6px; margin-bottom: 10px; }
+#atlas-views button {
+  padding: 6px 12px; font-size: 12.5px; cursor: pointer;
+  background: rgba(255,255,255,0.05); color: var(--dim);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; transition: all .15s;
+}
+#atlas-views button.on { color: var(--gold); border-color: rgba(255,210,127,0.5); background: rgba(255,210,127,0.1); }
+#btn-atlas-star.on { color: #ffd27f; border-color: rgba(255,210,127,0.6); background: rgba(255,210,127,0.14); }

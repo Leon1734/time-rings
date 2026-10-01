@@ -117,8 +117,12 @@
     try {
       const st = S.state;
       const parts = [];
-      if (st.mode !== 'deep') parts.push('m=' + st.mode);
-      if (st.selected) parts.push('e=' + st.selected);
+      if (tour) {
+        parts.push('tour=' + tour.id);       // 分享的是整条教学路线
+      } else {
+        if (st.mode !== 'deep') parts.push('m=' + st.mode);
+        if (st.selected) parts.push('e=' + st.selected);
+      }
       const newHash = parts.length ? '#' + parts.join('&') : '';
       if (location.hash !== newHash) {
         if (newHash) history.replaceState(null, '', newHash);
@@ -132,6 +136,14 @@
       const i = kv.indexOf('=');
       if (i > 0) h[decodeURIComponent(kv.slice(0, i))] = decodeURIComponent(kv.slice(i + 1));
     });
+    if (h.tour) {
+      const t = D.TOURS.filter(function (x) { return x.id === h.tour; })[0];
+      if (t) {
+        window.__TR_NO_AUTO_FLY = true;
+        startTour(t);
+        return;
+      }
+    }
     if (h.m && D.ERAS[h.m]) {
       const b = document.querySelector('#mode-seg button[data-mode="' + h.m + '"]');
       if (b) b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -316,6 +328,7 @@
     $('tour-player').classList.remove('hidden');
     stopTourAuto();
     gotoTourStep(0);
+    updateHash();          // 路线分享链接 #tour=xxx
   }
   function gotoTourStep(i) {
     if (!tour) return;
@@ -352,6 +365,7 @@
     $('tour-player').classList.add('hidden');
     $('detail-panel').classList.add('hidden');
     S.clearSelection();
+    updateHash();
   });
 
   /* ================= 🗺 小地图 ================= */
@@ -660,63 +674,104 @@
   });
 
   /* ================= 📚 长河图鉴 ================= */
-  let atlasBuiltMode = null;
-  function openAtlas() {
-    if (atlasBuiltMode !== S.state.mode) {
-      const eras = D.ERAS[S.state.mode];
-      const evs = S.eventsInMode().slice().sort(function (a, b) { return b.ago - a.ago; });
-      let html = '';
-      eras.forEach(function (era, i) {
-        const pA = Math.min(S.progressOf(era.from), S.progressOf(era.to));
-        const pB = Math.max(S.progressOf(era.from), S.progressOf(era.to));
-        const set = evs.filter(function (e) {
+  let atlasKey = null, atlasView = 'era', atlasStar = false;
+  function atlasGroups(evs) {
+    if (atlasView === 'civ') {
+      return [
+        { icon: '🐉', name: '中国支流', filter: function (e) { return !!e.cn; } },
+        { icon: '🏛️', name: '希腊·罗马支流', filter: function (e) { return e.cult === 'grc'; } },
+        { icon: '🕌', name: '阿拉伯·伊斯兰支流', filter: function (e) { return e.cult === 'isl'; } },
+        { icon: '🕉️', name: '印度支流', filter: function (e) { return e.cult === 'ind'; } },
+        { icon: '🌍', name: '世界与自然', filter: function (e) { return !e.cn && !e.cult; } }
+      ];
+    }
+    const eras = D.ERAS[S.state.mode];
+    return eras.map(function (era) {
+      const pA = Math.min(S.progressOf(era.from), S.progressOf(era.to));
+      const pB = Math.max(S.progressOf(era.from), S.progressOf(era.to));
+      return {
+        icon: D.eraEmoji(era.name), name: era.name,
+        filter: function (e) {
           const p = S.progressOf(e.ago);
           return p >= pA && p <= pB;
-        });
-        html += '<details' + (i === eras.length - 1 ? ' open' : '') + '><summary>' +
-          D.eraEmoji(era.name) + ' ' + esc(era.name) + ' · ' + set.length + ' 事件</summary><div class="atlas-ev">' +
-          (set.length ? set.map(function (e) {
-            return '<button class="chip link" data-goto="' + e.id + '">' + D.CATS[e.cat].icon + ' ' + esc(e.title) + '</button>';
-          }).join('') : '<span class="dim">无</span>') + '</div></details>';
-      });
-      const list = document.getElementById('atlas-list');
-      list.innerHTML = html;
-      list.querySelectorAll('[data-goto]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          document.getElementById('modal-atlas').classList.add('hidden');
-          S.selectEvent(b.dataset.goto, true);
-          syncButtons();
-        });
-      });
-      /* 搜索过滤：命中关键词时自动展开所在卷 */
-      const search = document.getElementById('atlas-search');
-      if (search) {
-        search.value = '';
-        const handler = function () {
-          const q = search.value.trim().toLowerCase();
-          list.querySelectorAll('details').forEach(function (det) {
-            const hitEvs = det.querySelectorAll('[data-goto]');
-            let any = !q;
-            hitEvs.forEach(function (b) {
-              b.style.display = (!q || b.textContent.toLowerCase().indexOf(q) >= 0) ? '' : 'none';
-              if (q && b.textContent.toLowerCase().indexOf(q) >= 0) any = true;
-            });
-            det.style.display = any ? '' : 'none';
-            if (q) det.open = any;
-          });
-        };
-        if (!search.dataset.bound) {
-          search.addEventListener('input', handler);
-          search.dataset.bound = '1';
-        } else {
-          handler();
         }
-      }
-      atlasBuiltMode = S.state.mode;
+      };
+    });
+  }
+  function buildAtlasList() {
+    const evs = S.eventsInMode().slice().sort(function (a, b) { return b.ago - a.ago; });
+    const groups = atlasGroups(evs);
+    let html = '';
+    groups.forEach(function (grp, gi) {
+      const set = evs.filter(grp.filter);
+      const shown = atlasStar ? set.filter(function (e) { return !!e.wiki; }) : set;
+      if (atlasStar && !shown.length) return;
+      html += '<details' + (gi === groups.length - 1 ? ' open' : '') + '><summary>' +
+        grp.icon + ' ' + esc(grp.name) + ' · ' + shown.length + ' 事件</summary><div class="atlas-ev">' +
+        (shown.length ? shown.map(function (e) {
+          return '<button class="chip link" data-goto="' + e.id + '"' + (e.wiki ? ' data-star="1"' : '') + '>' +
+            (e.wiki ? '⭐ ' : '') + D.CATS[e.cat].icon + ' ' + esc(e.title) + '</button>';
+        }).join('') : '<span class="dim">无</span>') + '</div></details>';
+    });
+    const list = document.getElementById('atlas-list');
+    list.innerHTML = html;
+    list.querySelectorAll('[data-goto]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.getElementById('modal-atlas').classList.add('hidden');
+        S.selectEvent(b.dataset.goto, true);
+        syncButtons();
+      });
+    });
+    applyAtlasFilter();
+  }
+  function applyAtlasFilter() {
+    const search = document.getElementById('atlas-search');
+    const list = document.getElementById('atlas-list');
+    const q = search ? search.value.trim().toLowerCase() : '';
+    list.querySelectorAll('details').forEach(function (det) {
+      const btns = det.querySelectorAll('[data-goto]');
+      let any = !q;
+      btns.forEach(function (b) {
+        let show = !q || b.textContent.toLowerCase().indexOf(q) >= 0;
+        if (atlasStar && b.dataset.star !== '1') show = false;
+        b.style.display = show ? '' : 'none';
+        if (show) any = true;
+      });
+      det.style.display = any ? '' : 'none';
+      if (q && any) det.open = true;
+    });
+  }
+  function openAtlas() {
+    const key = S.state.mode + '|' + atlasView + '|' + (atlasStar ? 1 : 0);
+    if (atlasKey !== key) {
+      buildAtlasList();
+      atlasKey = key;
+    }
+    const search = document.getElementById('atlas-search');
+    if (search && !search.dataset.bound) {
+      search.addEventListener('input', applyAtlasFilter);
+      search.dataset.bound = '1';
     }
     $('modal-atlas').classList.remove('hidden');
   }
   $('btn-atlas').addEventListener('click', openAtlas);
+  document.querySelectorAll('#atlas-views [data-view]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('#atlas-views [data-view]').forEach(function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      atlasView = b.dataset.view;
+      atlasKey = null;
+      buildAtlasList();
+      atlasKey = S.state.mode + '|' + atlasView + '|' + (atlasStar ? 1 : 0);
+    });
+  });
+  $('btn-atlas-star').addEventListener('click', function () {
+    atlasStar = !atlasStar;
+    this.classList.toggle('on', atlasStar);
+    atlasKey = null;
+    buildAtlasList();
+    atlasKey = S.state.mode + '|' + atlasView + '|' + (atlasStar ? 1 : 0);
+  });
 
   /* ================= 💾 偏好记忆 ================= */
   const PREF_KEY = 'tr-prefs-v1';
