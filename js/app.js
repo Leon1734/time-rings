@@ -976,6 +976,27 @@
     } catch (e) {}
   }
 
+  /* ---- 🎂 "你出生后的大事"（设置过生日才显示） ---- */
+  function birthYear() {
+    try { return parseInt(localStorage.getItem('tr-birth'), 10) || null; } catch (e) { return null; }
+  }
+  function birthAfterHtml(ev) {
+    const y = birthYear();
+    if (!y) return '';
+    const birthAgo = Math.max(1, 2026 - y);
+    const after = S.eventsInMode()
+      .filter(function (e) { return e.id !== ev.id && e.ago < birthAgo; })
+      .sort(function (a, b) { return b.ago - a.ago; })
+      .slice(0, 6);
+    if (!after.length) return '';
+    return '<h3>🎂 你出生后的大事</h3><div class="near">' +
+      after.map(function (e2) {
+        const gap = Math.max(1, birthAgo - e2.ago);
+        return '<button class="chip link" data-goto="' + e2.id + '">' +
+          esc(e2.title) + ' <i>你出生后 ' + gap + ' 年</i></button>';
+      }).join('') + '</div>';
+  }
+
   /* ---- 事件档案卡 ---- */
   function renderEventPanel(id) {
     const ev = eventById(id);
@@ -992,6 +1013,7 @@
       '<div class="cosmic" title="把宇宙138亿年压缩成一年，该事件发生的时刻">🌌 宇宙日历：<b>' + D.cosmicDate(ev.ago) + '</b></div>' +
       '<p class="desc">' + esc(ev.desc) + '</p>' +
       '<ul class="facts">' + ev.facts.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
+      birthAfterHtml(ev) +
       (near.length ? '<h3>⏳ 同时代的星空</h3><div class="near">' +
         near.map(function (e2) {
           return '<button class="chip link" data-goto="' + e2.id + '">' +
@@ -1368,6 +1390,92 @@
     document.getElementById('modal-birth').classList.add('hidden');
     pluck(660, 0.12, 0.05);
     launchBirth(v);
+  });
+
+  /* ================= 📊 探索报告 ================= */
+  function drawReport() {
+    const cv = document.getElementById('report-canvas');
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const explored = getExplored();
+    const total = D.EVENTS.length;
+    const doneN = Object.keys(explored).length;
+
+    /* 背景 */
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0a101e'); bg.addColorStop(1, '#060a14');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    /* 星尘点缀 */
+    for (let i = 0; i < 90; i++) {
+      ctx.fillStyle = 'rgba(200,215,255,' + (0.05 + (i % 5) * 0.03) + ')';
+      ctx.fillRect((i * 97) % W, (i * 53) % H, 2, 2);
+    }
+    /* 标题 */
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#ffd27f';
+    ctx.font = '700 44px "Microsoft YaHei"';
+    ctx.fillText('🏞️ 滚滚长河 · 探索报告', 60, 90);
+    ctx.fillStyle = '#8b93a4'; ctx.font = '20px "Microsoft YaHei"';
+    const d = new Date();
+    ctx.fillText(d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日', 62, 126);
+
+    /* 总进度大数字 */
+    ctx.fillStyle = '#e8e2d4'; ctx.font = '700 30px "Microsoft YaHei"';
+    ctx.fillText('已点亮河灯', 60, 190);
+    ctx.fillStyle = '#ffd27f'; ctx.font = '700 88px "Microsoft YaHei"';
+    ctx.fillText(doneN, 60, 275);
+    ctx.fillStyle = '#6b7688'; ctx.font = '26px "Microsoft YaHei"';
+    ctx.fillText('/ ' + total, 60 + ctx.measureText(String(doneN)).width + 78, 272);
+
+    /* 六类横条 */
+    let y = 340;
+    Object.keys(D.CATS).forEach(function (k) {
+      const evs = D.EVENTS.filter(function (e) { return e.cat === k; });
+      const done = evs.filter(function (e) { return explored[e.id]; }).length;
+      const pct = evs.length ? done / evs.length : 0;
+      ctx.fillStyle = '#e8e2d4'; ctx.font = '22px "Microsoft YaHei"';
+      ctx.fillText(D.CATS[k].icon + ' ' + D.CATS[k].name, 60, y);
+      ctx.fillStyle = '#6b7688'; ctx.font = '18px "Microsoft YaHei"';
+      ctx.textAlign = 'right';
+      ctx.fillText(done + ' / ' + evs.length, W - 60, y);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      ctx.fillRect(60, y + 12, W - 120, 14);
+      ctx.fillStyle = D.CATS[k].color;
+      ctx.fillRect(60, y + 12, (W - 120) * pct, 14);
+      y += 62;
+    });
+
+    /* 问答成绩 */
+    y += 6;
+    ctx.fillStyle = '#e8e2d4'; ctx.font = '22px "Microsoft YaHei"';
+    let quizLine = '🏆 问答最佳连对 ' + quizBest;
+    if (quizWrong.length) quizLine += ' · 错题待重练 ' + quizWrong.length;
+    try {
+      const b = localStorage.getItem('tr-birth');
+      if (b) quizLine += ' · 🎂 出生于 ' + b + ' 年';
+    } catch (e) {}
+    ctx.fillText(quizLine, 60, y);
+
+    /* 页脚 */
+    ctx.fillStyle = '#5b6474'; ctx.font = '18px "Microsoft YaHei"';
+    ctx.fillText('leon1734.github.io/time-rings · 把这条 138 亿年的长河分享给朋友', 60, H - 40);
+  }
+  $('btn-report').addEventListener('click', function () {
+    drawReport();
+    $('modal-report').classList.remove('hidden');
+  });
+  $('btn-report-save').addEventListener('click', function () {
+    try {
+      const a = document.createElement('a');
+      a.href = document.getElementById('report-canvas').toDataURL('image/png');
+      a.download = '滚滚长河-探索报告-' + new Date().toISOString().slice(0, 10) + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      pluck(720, 0.1, 0.04);
+    } catch (err) {
+      $('error-banner').textContent = '⚠️ 保存失败：' + err.message;
+      $('error-banner').classList.remove('hidden');
+    }
   });
 
   /* ================= 底部小知识滚动 ================= */

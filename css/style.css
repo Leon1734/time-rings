@@ -604,3 +604,11 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   transition: all .15s;
 }
 #btn-birth:hover { border-color: #bcd0ff; transform: translateY(-1px); }
+
+#btn-report {
+  display: block; width: 100%; margin-top: 6px; text-align: left;
+  font-size: 12px; padding: 7px 10px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px; color: var(--text); transition: all .15s;
+}
+#btn-report:hover { border-color: var(--gold); color: var(--gold); }

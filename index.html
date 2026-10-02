@@ -127,6 +127,7 @@
     <div id="ev-count">—</div>
     <div id="explored">🧭 已探索 0 个事件</div>
     <canvas id="rings-canvas" width="204" height="54"></canvas>
+    <button id="btn-report" title="生成可保存的探索报告图片">📊 探索报告</button>
     <button id="today-lantern" class="hidden" title="点击直达这盏河灯">🌟 今日之灯</button>
     <button id="btn-birth" title="输入出生年份，看看那年河上的世界">🎂 时光机 · 你出生那年</button>
 
@@ -222,6 +223,18 @@
     </div>
   </div>
 
+  <!-- 探索报告 -->
+  <div class="modal hidden" id="modal-report">
+    <div class="modal-card" style="width:min(560px,92vw); text-align:center;">
+      <button class="modal-close">✕</button>
+      <h2>📊 探索报告</h2>
+      <canvas id="report-canvas" width="1000" height="620" style="max-width:100%; border-radius:12px;"></canvas>
+      <div style="margin-top:14px;">
+        <button id="btn-report-save" style="padding:10px 24px; font-size:14px; font-weight:700; color:#1a1408; background:linear-gradient(90deg,#ffd27f,#ff9d5c); border:none; border-radius:10px; cursor:pointer;">⬇ 保存图片</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 帮助 -->
   <div class="modal hidden" id="modal-help">
     <div class="modal-card">
@@ -235,9 +248,9 @@
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>
-  <script src="js/data.js?v=river22b"></script>
-  <script src="js/textures.js?v=river22b"></script>
-  <script src="js/scene.js?v=river22b"></script>
-  <script src="js/app.js?v=river22b"></script>
+  <script src="js/data.js?v=river23"></script>
+  <script src="js/textures.js?v=river23"></script>
+  <script src="js/scene.js?v=river23"></script>
+  <script src="js/app.js?v=river23"></script>
 </body>
 </html>
