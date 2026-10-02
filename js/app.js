@@ -870,13 +870,58 @@
     tip.style.top = (h.y + 16) + 'px';
   });
 
+  /* ================= ⇄ 事件对比模式 ================= */
+  let compareFirst = null;
+  function fmtGap(gap) {
+    if (gap <= 2) return '同年发生！';
+    if (gap < 1e4) return '相隔 ' + Math.round(gap) + ' 年';
+    if (gap < 1e8) return '相隔 ' + (gap / 1e4).toFixed(1) + ' 万年';
+    return '相隔 ' + (gap / 1e8).toFixed(1) + ' 亿年';
+  }
+  function renderCompare(a, b) {
+    const gap = Math.abs(a.ago - b.ago);
+    const older = a.ago > b.ago ? a : b;
+    const newer = a.ago > b.ago ? b : a;
+    $('panel-body').innerHTML =
+      '<div class="tags"><span class="chip" style="color:#cfe3ff;border-color:#7fa8d8">⇄ 对比</span></div>' +
+      '<div class="compare-grid">' +
+        compareCol(a) + compareCol(b) +
+      '</div>' +
+      '<div class="compare-gap">' + fmtGap(gap) + '</div>' +
+      '<p class="desc" style="text-align:center;">' +
+        (gap <= 2 ? '两盏河灯几乎同时点亮——历史在两岸齐头并进。'
+                  : '「' + esc(older.title) + '」点亮 ' + Math.round(gap) + ' 年后，' +
+                    '「' + esc(newer.title) + '」才加入这条长河。') + '</p>' +
+      '<div class="near" style="justify-content:center;">' +
+        '<button class="chip link" id="btn-compare-exit">✕ 结束对比</button></div>';
+    $('detail-panel').classList.remove('hidden');
+    document.getElementById('btn-compare-exit').addEventListener('click', function () {
+      renderEventPanel(b.id);
+    });
+  }
+  function compareCol(e) {
+    const c = D.CATS[e.cat];
+    return '<div class="compare-col" style="--c:' + c.color + '">' +
+      '<div class="compare-emoji">' + (D.CAT_EMOJI[e.cat] || '📜') + '</div>' +
+      '<h3>' + esc(e.title) + '</h3>' +
+      '<p class="compare-year">' + D.fmtAgo(e.ago) + '</p>' +
+      '<p class="compare-fact">' + esc(e.facts[0] || e.desc.slice(0, 40)) + '</p>' +
+      '</div>';
+  }
+
   /* ================= 选中：档案卡 / 纪元卡 ================= */
   S.onSelect(function (sel) {
     if (!sel) {
+      if (compareFirst) { compareFirst = null; }        // 点空白取消对比
       $('detail-panel').classList.add('hidden');
       updateHash();
       autoResume();
       return;
+    }
+    if (sel.type === 'event' && compareFirst && sel.id !== compareFirst) {
+      const a = eventById(compareFirst), b = eventById(sel.id);
+      compareFirst = null;
+      if (a && b) { renderCompare(a, b); return; }
     }
     if (sel.type === 'event') {
       renderEventPanel(sel.id);
@@ -1011,6 +1056,7 @@
       '<h2 id="panel-title">' + esc(ev.title) + '</h2>' +
       '<p id="panel-en">' + esc(ev.en) + '</p>' +
       '<div class="cosmic" title="把宇宙138亿年压缩成一年，该事件发生的时刻">🌌 宇宙日历：<b>' + D.cosmicDate(ev.ago) + '</b></div>' +
+      '<div class="near"><button class="chip link" id="btn-compare">⇄ 与另一盏河灯对比</button></div>' +
       '<p class="desc">' + esc(ev.desc) + '</p>' +
       '<ul class="facts">' + ev.facts.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
       birthAfterHtml(ev) +
@@ -1024,6 +1070,20 @@
     loadWikiImage(ev);
     $('detail-panel').querySelectorAll('[data-goto]').forEach(function (b) {
       b.addEventListener('click', function () { S.selectEvent(b.dataset.goto, true); });
+    });
+    const cmpBtn = document.getElementById('btn-compare');
+    if (cmpBtn) cmpBtn.addEventListener('click', function () {
+      compareFirst = ev.id;
+      speak('对比模式：请再点一盏河灯。', true);
+      $('panel-body').innerHTML =
+        '<div class="tags"><span class="chip" style="color:#cfe3ff;border-color:#7fa8d8">⇄ 对比模式</span></div>' +
+        '<h2>已选：「' + esc(ev.title) + '」</h2>' +
+        '<p class="desc" style="margin-top:10px;">现在单击河面上<b>另一盏河灯</b>，看看两件事相隔多少年。</p>' +
+        '<div class="near"><button class="chip link" id="btn-compare-cancel">✕ 取消对比</button></div>';
+      document.getElementById('btn-compare-cancel').addEventListener('click', function () {
+        compareFirst = null;
+        renderEventPanel(ev.id);
+      });
     });
   }
   /* "同时代"：河道上航程最近的其他河灯 */
@@ -1163,6 +1223,10 @@
     } else if (e.key === 'p' || e.key === 'P') {
       S.togglePause();
       syncButtons();
+    } else if (e.key === 'j' || e.key === 'J') {
+      jumpLantern(1);
+    } else if (e.key === 'k' || e.key === 'K') {
+      jumpLantern(-1);
     } else if (e.key === 'ArrowRight') {
       S.nudge(e.shiftKey ? 0.03 : 0.008);
       syncButtons();
@@ -1477,6 +1541,35 @@
       $('error-banner').classList.remove('hidden');
     }
   });
+
+  /* ================= 🎲 随机漫游 ================= */
+  $('btn-random').addEventListener('click', function () {
+    const explored = getExplored();
+    let pool = S.eventsInMode().filter(function (e) { return !explored[e.id]; });
+    if (!pool.length) pool = S.eventsInMode();
+    if (!pool.length) return;
+    const ev = pool[Math.floor(Math.random() * pool.length)];
+    pluck(500 + Math.floor(Math.random() * 300), 0.1, 0.04);
+    S.selectEvent(ev.id, true);
+    syncButtons();
+  });
+
+  /* ================= J/K 沿河跳灯 ================= */
+  function jumpLantern(dir) {
+    const st = S.state;
+    let refP = st.flyP;
+    if (st.selected) {
+      const cur = eventById(st.selected);
+      if (cur) refP = S.progressOf(cur.ago);
+    }
+    let best = null, bd = 1e9;
+    S.eventsInMode().forEach(function (e) {
+      const p = S.progressOf(e.ago);
+      const d = (p - refP) * dir;
+      if (d > 0.0005 && d < bd) { bd = d; best = e; }
+    });
+    if (best) { S.selectEvent(best.id, true); syncButtons(); }
+  }
 
   /* ================= 底部小知识滚动 ================= */
   let tipIdx = Math.floor(Math.random() * D.TIPS.length);
