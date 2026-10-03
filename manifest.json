@@ -8,6 +8,11 @@
   "orientation": "any",
   "background_color": "#04060c",
   "theme_color": "#04060c",
+  "shortcuts": [
+    { "name": "🎬 飞览全程", "short_name": "飞览", "url": "./?fly=1" },
+    { "name": "🏆 问答", "short_name": "问答", "url": "./?quiz=1" },
+    { "name": "📚 长河图鉴", "short_name": "图鉴", "url": "./?atlas=1" }
+  ],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

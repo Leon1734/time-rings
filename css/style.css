@@ -389,26 +389,35 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   #brand p { display: none; }
 }
 @media (max-width: 640px) {
+  #topbar { padding: 8px 10px 0; align-items: center; }
+  #brand h1 { font-size: 17px; letter-spacing: 1px; }
+  #brand p { display: none; }
+  #top-actions { gap: 4px; max-width: none; }
+  #top-actions button { padding: 6px 8px; font-size: 11px; border-radius: 7px; }
+  /* 移动端收起次要按钮（水声/导览/录制/画面/鸟瞰/科普课堂） */
+  #btn-overview, #btn-doc, #btn-voice, #btn-sound, #btn-rec, #btn-shot,
+  [data-modal="modal-science"] { display: none; }
+  #hud { top: 78px; }
+
   #side-panel {
-    top: 74px; left: 10px; right: 10px; bottom: auto; width: auto;
-    max-height: 58vh;
+    top: 62px; left: 10px; right: 10px; bottom: auto; width: auto;
+    max-height: 56vh;
     transform: translateX(-110%); transition: transform .28s ease;
   }
   #side-panel.open { transform: none; }
   #panel-toggle {
-    position: fixed; left: 10px; top: 74px; z-index: 46;
-    width: 42px; height: 42px; font-size: 19px;
+    position: fixed; left: 10px; top: 60px; z-index: 46;
+    width: 40px; height: 40px; font-size: 18px;
     background: var(--panel); color: var(--gold);
     border: 1px solid var(--panel-border); border-radius: 12px;
     cursor: pointer; backdrop-filter: blur(8px);
   }
-  #top-actions button { padding: 7px 9px; font-size: 12px; }
-  #brand p { display: none; }
+  #hud { top: 78px; }
   #hud-year { font-size: 20px; }
   #hud-progress { width: 150px; }
   #detail-panel { width: calc(100vw - 20px); left: 10px; right: 10px; }
   #minimap { width: 210px; height: 146px; }
-  #quiz-card { top: 124px; }
+  #quiz-card { top: 128px; }
   #ticker { display: none; }
   #rec-chip { top: 64px; }
 }

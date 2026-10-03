@@ -1252,6 +1252,8 @@
       jumpLantern(1);
     } else if (e.key === 'k' || e.key === 'K') {
       jumpLantern(-1);
+    } else if (e.key === '?') {
+      $('modal-help').classList.remove('hidden');
     } else if (e.key === 'ArrowRight') {
       S.nudge(e.shiftKey ? 0.03 : 0.008);
       syncButtons();
@@ -1678,8 +1680,9 @@
     setupTodayLantern();
     restorePrefs();
     /* 首次访问：引导浮层 */
+    const params = new URLSearchParams(location.search);
     try {
-      if (!localStorage.getItem('tr-onboard')) {
+      if (!localStorage.getItem('tr-onboard') && !params.get('quiz') && !params.get('atlas')) {
         $('onboard').classList.remove('hidden');
       }
     } catch (e) {}
@@ -1689,7 +1692,15 @@
       pluck(660, 0.12, 0.05);
       setTimeout(function () { pluck(880, 0.16, 0.05); }, 120);
     });
-    applyHash();        // 解析分享链接（#m=模式&e=事件），有事件定位则不自动起飞
+    /* PWA 快捷方式：?fly / ?quiz / ?atlas */
+    if (params.get('quiz')) {
+      document.querySelector('#quiz-scope button[data-scope="all"]').classList.add('on');
+      startQuiz();
+      $('quiz-card').classList.remove('hidden');
+    }
+    if (params.get('atlas')) openAtlas();
+    applyHash();
+    if (params.get('fly') && !window.__TR_NO_AUTO_FLY) { /* 默认即飞览，无需处理 */ }        // 解析分享链接（#m=模式&e=事件），有事件定位则不自动起飞
     /* PWA：https/localhost 下注册 Service Worker（离线可玩、可安装） */
     if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
       navigator.serviceWorker.register('sw.js').catch(function () {});
