@@ -51,6 +51,16 @@ const cnN = D.EVENTS.filter(e => e.cn === 1).length;
 console.log('🐉 中国支流：' + cnN + ' 盏');
 if (cnN === 0) warn('没有任何 cn:1 事件——中国支流将不出现');
 
+/* ---- 文明接力链 id 有效性 ---- */
+if (D.CHAINS) {
+  console.log('🔁 文明接力链：' + D.CHAINS.length + ' 条');
+  D.CHAINS.forEach(c => {
+    const bad = c.steps.filter(id => !ids.has(id));
+    if (bad.length) err('接力链 "' + c.name + '" 含无效 id: ' + bad.join(', '));
+    else console.log('  ✅ ' + c.icon + ' ' + c.name + ' · ' + c.steps.length + ' 棒');
+  });
+}
+
 /* ---- 教学路线 id 有效性 ---- */
 console.log('🎓 教学路线：' + D.TOURS.length + ' 条');
 D.TOURS.forEach(t => {

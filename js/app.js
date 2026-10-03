@@ -1021,6 +1021,30 @@
     } catch (e) {}
   }
 
+  /* ---- 🔁 文明接力链（所属链与上下游） ---- */
+  function chainHtml(ev) {
+    const chain = D.CHAINS.filter(function (c) { return c.steps.indexOf(ev.id) >= 0; })[0];
+    if (!chain) return '';
+    const idx = chain.steps.indexOf(ev.id);
+    const cell = function (stepId) {
+      const e2 = eventById(stepId);
+      if (!e2) return '';
+      const cur = stepId === ev.id;
+      return '<button class="chain-cell' + (cur ? ' cur' : '') + '" data-goto="' + stepId + '">' +
+        esc(e2.title) + '</button>';
+    };
+    const parts = [];
+    for (let i = 0; i < chain.steps.length; i++) {
+      parts.push(cell(chain.steps[i]));
+      if (i < chain.steps.length - 1) parts.push('<span class="chain-arrow">→</span>');
+    }
+    return '<h3>' + chain.icon + ' 文明接力 · ' + esc(chain.name) + '</h3>' +
+      '<div class="chain-flow">' + parts.join('') + '</div>' +
+      (idx < chain.steps.length - 1
+        ? '<p class="chain-note">下一棒：<b>' + esc((eventById(chain.steps[idx + 1]) || {}).title || '') + '</b></p>'
+        : '<p class="chain-note">这条接力的最新一棒——下一棒会是谁？</p>');
+  }
+
   /* ---- 🎂 "你出生后的大事"（设置过生日才显示） ---- */
   function birthYear() {
     try { return parseInt(localStorage.getItem('tr-birth'), 10) || null; } catch (e) { return null; }
@@ -1059,6 +1083,7 @@
       '<div class="near"><button class="chip link" id="btn-compare">⇄ 与另一盏河灯对比</button></div>' +
       '<p class="desc">' + esc(ev.desc) + '</p>' +
       '<ul class="facts">' + ev.facts.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
+      chainHtml(ev) +
       birthAfterHtml(ev) +
       (near.length ? '<h3>⏳ 同时代的星空</h3><div class="near">' +
         near.map(function (e2) {

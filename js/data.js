@@ -765,6 +765,23 @@ window.TR_DATA = (function () {
     }
   ];
 
+  /* ================= 🔁 文明接力链 =================
+   * 思想与发明的传承路线；档案卡展示所在链与上下游 */
+  const CHAINS = [
+    { id: 'words', icon: '📜', name: '文字与知识的接力',
+      steps: ['seed-047', 'seed-043', 'seed-056', 'seed-062', 'seed-066', 'seed-090'] },
+    { id: 'sky', icon: '🔭', name: '仰望星空的接力',
+      steps: ['seed-069', 'seed-070', 'seed-071', 'seed-079', 'seed-094'] },
+    { id: 'sky2', icon: '🚀', name: '飞天接力',
+      steps: ['seed-078', 'seed-086', 'seed-087'] },
+    { id: 'num', icon: '🔢', name: '数字与计算的接力',
+      steps: ['ext-ind-04', 'medieval-037', 'seed-090', 'seed-096'] },
+    { id: 'med', icon: '💊', name: '生命科学的接力',
+      steps: ['seed-082', 'seed-084', 'seed-091', 'seed-122'] },
+    { id: 'gov', icon: '⚖️', name: '治理与权利的接力',
+      steps: ['seed-051', 'medieval-041'] }
+  ];
+
   /* ================= 时代图腾（岸边大形象） =================
    * 按纪元名关键词匹配 emoji；顺序敏感（具体词在前） */
   const ERA_EMOJI = [
@@ -961,7 +978,7 @@ window.TR_DATA = (function () {
     NOW_YEAR: NOW_YEAR, T_UNIVERSE: T_UNIVERSE,
     CATS: CATS, MODES: MODES, ERAS: ERAS, EVENTS: EVENTS,
     TIPS: TIPS, SCIENCE: SCIENCE, HELP: HELP,
-    eraEmoji: eraEmoji, CAT_EMOJI: CAT_EMOJI, TOURS: TOURS, CULTS: CULTS,
+    eraEmoji: eraEmoji, CAT_EMOJI: CAT_EMOJI, TOURS: TOURS, CULTS: CULTS, CHAINS: CHAINS,
     fmtAgo: fmtAgo, cosmicDate: cosmicDate, COSMIC_SEC_YEARS: COSMIC_SEC_YEARS
   };
 })();

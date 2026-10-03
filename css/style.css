@@ -629,3 +629,25 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   text-align: center; font-size: 20px; font-weight: 700; color: var(--gold);
   padding: 10px 0 2px; text-shadow: 0 0 16px rgba(255,180,80,0.4);
 }
+
+
+/* ================= 文明接力链 ================= */
+.chain-flow {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  padding: 10px; border-radius: 10px;
+  background: rgba(255,210,127,0.05); border: 1px dashed rgba(255,210,127,0.3);
+}
+.chain-cell {
+  padding: 5px 9px; font-size: 11.5px; line-height: 1.4; text-align: left;
+  background: rgba(255,255,255,0.05); color: var(--text);
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 7px; cursor: pointer;
+  transition: all .15s; max-width: 150px;
+}
+.chain-cell:hover { border-color: var(--gold); color: var(--gold); }
+.chain-cell.cur {
+  background: rgba(255,210,127,0.16); color: var(--gold);
+  border-color: rgba(255,210,127,0.6); font-weight: 700;
+}
+.chain-arrow { color: var(--gold); opacity: 0.7; font-size: 13px; }
+.chain-note { font-size: 11.5px; color: var(--dim); margin-top: 6px; }
+.chain-note b { color: var(--gold); }
