@@ -1079,6 +1079,10 @@
         '<span class="chip year">' + D.fmtAgo(ev.ago) + '</span></div>' +
       '<h2 id="panel-title">' + esc(ev.title) + '</h2>' +
       '<p id="panel-en">' + esc(ev.en) + '</p>' +
+      '<div class="near" style="margin-bottom:10px;">' +
+        '<button class="chip link" id="btn-fav">' + (isFav(ev.id) ? '★ 已收藏' : '⭐ 收藏') + '</button>' +
+        '<button class="chip link" id="btn-compare">⇄ 与另一盏河灯对比</button>' +
+      '</div>' +
       '<div class="cosmic" title="把宇宙138亿年压缩成一年，该事件发生的时刻">🌌 宇宙日历：<b>' + D.cosmicDate(ev.ago) + '</b></div>' +
       '<div class="near"><button class="chip link" id="btn-compare">⇄ 与另一盏河灯对比</button></div>' +
       '<p class="desc">' + esc(ev.desc) + '</p>' +
@@ -1095,6 +1099,12 @@
     loadWikiImage(ev);
     $('detail-panel').querySelectorAll('[data-goto]').forEach(function (b) {
       b.addEventListener('click', function () { S.selectEvent(b.dataset.goto, true); });
+    });
+    const favBtn = document.getElementById('btn-fav');
+    if (favBtn) favBtn.addEventListener('click', function () {
+      toggleFav(ev.id);
+      favBtn.textContent = isFav(ev.id) ? '★ 已收藏' : '⭐ 收藏';
+      pluck(isFav(ev.id) ? 880 : 440, 0.1, 0.04);
     });
     const cmpBtn = document.getElementById('btn-compare');
     if (cmpBtn) cmpBtn.addEventListener('click', function () {
@@ -1598,6 +1608,32 @@
     if (best) { S.selectEvent(best.id, true); syncButtons(); }
   }
 
+  /* ================= ⭐ 收藏夹 ================= */
+  let favs = [];
+  try { favs = JSON.parse(localStorage.getItem('tr-favs') || '[]').filter(function (id) { return eventById(id); }); } catch (e) {}
+  function saveFavs() {
+    try { localStorage.setItem('tr-favs', JSON.stringify(favs)); } catch (e) {}
+  }
+  function isFav(id) { return favs.indexOf(id) >= 0; }
+  function toggleFav(id) {
+    const i = favs.indexOf(id);
+    if (i >= 0) favs.splice(i, 1); else favs.push(id);
+    saveFavs();
+    renderFavs();
+  }
+  function renderFavs() {
+    const box = $('fav-list');
+    if (!box) return;
+    box.innerHTML = favs.map(function (id) {
+      const e = eventById(id);
+      return e ? '<button class="chip link" data-goto="' + id + '" title="点击直达河灯">' +
+        D.CATS[e.cat].icon + ' ' + esc(e.title) + '</button>' : '';
+    }).join('');
+    box.querySelectorAll('[data-goto]').forEach(function (b) {
+      b.addEventListener('click', function () { S.selectEvent(b.dataset.goto, true); syncButtons(); });
+    });
+  }
+
   /* ================= 底部小知识滚动 ================= */
   let tipIdx = Math.floor(Math.random() * D.TIPS.length);
   function showTip() {
@@ -1677,6 +1713,7 @@
     syncButtons();
     updateExplored();
     drawRings();
+    renderFavs();
     setupTodayLantern();
     restorePrefs();
     /* 首次访问：引导浮层 */

@@ -660,3 +660,6 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 .chain-arrow { color: var(--gold); opacity: 0.7; font-size: 13px; }
 .chain-note { font-size: 11.5px; color: var(--dim); margin-top: 6px; }
 .chain-note b { color: var(--gold); }
+
+#fav-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+#fav-list:empty { display: none; }
