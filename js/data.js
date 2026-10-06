@@ -739,7 +739,6 @@ window.TR_DATA = (function () {
     { id: "ext-grc-13", cult: "grc", cat: 'sci', ago: 2400, imp: 1, title: "阿里斯塔克斯：日心说第一人", en: "Aristarchus Heliocentrism", desc: "萨摩斯的阿里斯塔克斯提出地球绕太阳转，比哥白尼早了近两千年——可惜知音寥寥，预言被埋没。", facts: ["他用几何测算出日地距离约为月地距离的19倍", "阿基米德在著作中记录了这位惊世骇俗的同乡"] },
     { id: "ext-grc-14", cult: "grc", cn: 1, cat: 'civ', ago: 1890, imp: 1, title: "哈德良长城", en: "Hadrian's Wall", desc: "哈德良皇帝在不列颠修起横贯岛的石墙：117公里、堡垒与瞭望塔密布——罗马帝国的边境界碑。", facts: ["墙上每罗马里一座小堡，供士兵取暖换岗", "城墙涂石灰刷白，远在海上也能望见帝国边界"] },
     { id: "ext-isl-14", cult: "isl", cat: 'civ', ago: 1336, imp: 2, title: "科尔多瓦大清真寺", en: "Great Mosque of Córdoba", desc: "倭马亚王朝在科尔多瓦起建大清真寺：850根斑岩与大理石柱、红白双层马蹄拱，如一片石化的棕榈林。", facts: ["天主教收复后在其中嵌建教堂，建筑因而完整幸存", "米哈拉布前的穹顶用数万块马赛克拼出古兰经文"] },
-    { id: "ext-isl-15", cult: "isl", cat: 'sci', ago: 1064, imp: 2, title: "伊本·西那《医典》", en: "Ibn Sina's Canon of Medicine", desc: "伊本·西那（阿维森纳）完成百万字《医典》：传染病、药物试验与临床规范汇于一书——此后600年是欧洲医学院的教材。", facts: ["他18岁便通读当时全部医学典籍", "但丁《神曲》里，他与荷马同列于贤哲之厅"] },
     { id: "ext-isl-16", cult: "isl", cat: 'civ', ago: 1171, imp: 2, title: "萨拉丁建阿尤布王朝", en: "Ayyubid Dynasty", desc: "萨拉丁终结法蒂玛王朝、建立阿尤布王朝，以埃及为基地统一叙利亚——库尔德裔统帅登上历史中心。", facts: ["他重建开罗城墙并修筑水道防围困", "大马士革的倭马亚清真寺安葬着他"] },
     { id: "ext-isl-17", cult: "isl", cat: 'sci', ago: 1258, imp: 2, title: "马拉盖天文台", en: "Maragha Observatory", desc: "旭烈兀为天文学家图西建造马拉盖天文台：巨型墙象限仪、藏书四十万卷——伊斯兰天文学的最后高峰。", facts: ["图西双圆运动启发哥白尼的宇宙模型", "天文台图书馆的藏书据说洗劫时仍堆满街道"] },
     { id: "ext-isl-18", cult: "isl", cat: 'art', ago: 727, imp: 2, title: "波斯细密画与《列王纪》", en: "Shahnameh", desc: "菲尔多西用30年写成6万行史诗《列王纪》，为波斯语保存了从神话到萨珊的全部记忆——波斯语的复活者。", facts: ["据说稿酬是每行一枚金币，共6万枚", "细密画传统随后把史诗场景绘成琉璃般的画面"] },
@@ -771,7 +770,6 @@ window.TR_DATA = (function () {
     { id: "ext-isl-04", cult: "isl", cat: 'civ', ago: 1097, imp: 1, title: "科尔多瓦的辉煌", en: "Caliphate of Córdoba", desc: "后倭马亚王朝在伊比利亚建立科尔多瓦哈里发国，安达卢西亚成为欧洲最繁华的城市。", facts: ["科尔多瓦拥有当时欧洲最大的图书馆与街灯", "伊斯兰、犹太与基督教学者在此共译典籍"] },
     { id: "ext-isl-05", cult: "isl", cat: 'sci', ago: 955, imp: 2, title: "曼齐刻尔特之战", en: "Battle of Manzikert", desc: "塞尔柱突厥人击溃拜占庭主力，小亚细亚自此突厥化——几百年后奥斯曼帝国在此崛起。", facts: ["拜占庭皇帝罗曼努斯四世被俘", "此战间接引发了两个世纪后的十字军东征"] },
     { id: "ext-isl-06", cult: "isl", cat: 'civ', ago: 839, imp: 2, title: "萨拉丁收复耶路撒冷", en: "Saladin Retakes Jerusalem", desc: "库尔德裔苏丹萨拉丁在哈丁之战大败十字军、收复耶路撒冷，宽厚风度传为佳话。", facts: ["他赦免了全城居民，与当年十字军屠城形成对照", "萨拉丁的名声甚至赢得敌手的敬意"] },
-    { id: "ext-isl-07", cult: "isl", cat: 'civ', ago: 506, imp: 1, title: "苏莱曼大帝", en: "Suleiman the Magnificent", desc: "奥斯曼帝国在苏莱曼一世治下达到鼎盛：立法、建筑与远征并行，与欧洲列强分庭抗礼。", facts: ["建筑师希南为他留下300多座传世之作", "欧洲人称他大帝，奥斯曼人尊他立法者"] },
     { id: "ext-isl-08", cult: "isl", cat: 'art', ago: 410, imp: 1, title: "蓝色清真寺", en: "Blue Mosque, Istanbul", desc: "伊斯坦布尔的苏丹艾哈迈德清真寺以蓝白瓷砖闻名，与圣索菲亚大教堂隔广场相望。", facts: ["六座宣礼塔在当时引起轩然大波", "两万多块伊兹尼克瓷砖拼出满堂蓝白"] },
     { id: "ext-isl-09", cult: "isl", cat: 'art', ago: 1250, imp: 1, title: "《一千零一夜》成形", en: "One Thousand and One Nights", desc: "山鲁佐德的故事集在阿拔斯时代汇集成形，随丝路传遍世界——阿拉丁与辛巴达成了全球共同记忆。", facts: ["故事框架来自波斯，在巴格达与开罗不断增补", "最早的阿拉伯文抄本比欧洲印刷术还早"] },
     { id: "ext-ind-01", cult: "ind", cat: 'civ', ago: 4526, imp: 2, title: "哈拉帕鼎盛", en: "Harappan Zenith", desc: "印度河流域的摩亨佐-达罗与哈拉帕进入鼎盛：网格街道、标准砖与复杂排水，青铜时代的规划奇迹。", facts: ["城市排水系统领先同时代两千年", "其文字至今未被破译，是考古学著名悬案"] },
@@ -780,9 +778,7 @@ window.TR_DATA = (function () {
     { id: "ext-ind-04", cult: "ind", cat: 'sci', ago: 1398, imp: 2, title: "零与十进位制", en: "Invention of Zero", desc: "数学家婆罗摩笈多系统阐述零的运算规则——这个什么都没有的符号，成为数学史上最伟大的发明之一。", facts: ["零经阿拉伯传至欧洲，得名阿拉伯数字", "没有零就没有位值制，也没有现代代数"] },
     { id: "ext-ind-05", cult: "ind", cat: 'civ', ago: 1550, imp: 1, title: "那烂陀寺鼎盛", en: "Nalanda University", desc: "那烂陀成为世界最早的大学之一：数千学者研习佛学与逻辑，玄奘亦曾在此求学。", facts: ["传说藏书九百万卷", "入学口试淘汰率极高"] },
     { id: "ext-ind-06", cult: "ind", cat: 'civ', ago: 820, imp: 1, title: "德里苏丹国", en: "Delhi Sultanate", desc: "突厥裔军事贵族在德里建立苏丹国，北印度进入三百余年的伊斯兰王朝时代。", facts: ["库特布宣礼塔高73米，是世界最高的砖塔", "苏丹银币塔卡流通数百年"] },
-    { id: "ext-ind-07", cult: "ind", cat: 'civ', ago: 470, imp: 1, title: "阿克巴大帝", en: "Akbar the Great", desc: "莫卧儿帝国阿克巴推行宗教宽容与行政改革，帝国版图与文化融合达到顶峰。", facts: ["他娶拉杰普特公主并废除非穆斯林人头税", "宫廷中既有史学家也有翻译家"] },
     { id: "ext-ind-08", cult: "ind", cat: 'civ', ago: 79, imp: 2, title: "印度独立", en: "Indian Independence", desc: "甘地领导的非暴力不合作运动终结英国近两百年殖民统治，南亚进入新纪元。", facts: ["非暴力不合作启发了全球民权运动", "独立当日甘地并未庆祝，而在加尔各答绝食"] },
-    { id: "ext-grc-01", cult: "grc", cat: 'civ', ago: 2620, imp: 1, title: "梭伦改革", en: "Solon's Reforms", desc: "梭伦废除债务奴隶制、按财产划分公民等级，为雅典民主铺下第一块基石。", facts: ["他立法定后远走十年，确保法律不被自己推翻", "债务奴隶制的废除让雅典公民再无卖身之虞"] },
     { id: "ext-grc-02", cult: "grc", cat: 'civ', ago: 2516, imp: 2, title: "希波战争", en: "Greco-Persian Wars", desc: "马拉松平原与萨拉米斯海峡，希腊城邦两次击退波斯帝国的远征——西方的自我认知由此发端。", facts: ["传令兵菲迪皮德斯跑回雅典报捷后力竭而亡", "萨拉米斯海战以数百小船击败千艘巨舰"] },
     { id: "ext-grc-03", cult: "grc", cat: 'civ', ago: 2466, imp: 2, title: "伯里克利黄金时代", en: "Age of Pericles", desc: "伯里克利治下的雅典：帕特农神庙落成、戏剧节盛大、公民大会如日中天——民主与艺术的双重巅峰。", facts: ["帕特农的金字比例成为建筑学圣典", "他哀悼阵亡将士的演说定义了民主"] },
     { id: "ext-grc-04", cult: "grc", cat: 'sci', ago: 2361, imp: 2, title: "亚里士多德建吕克昂学园", en: "Aristotle's Lyceum", desc: "亚里士多德在雅典创立吕克昂学园，从生物学到政治学分门别类地研究世界。", facts: ["他与亚历山大大帝是师生", "中世纪学者尊称他为那位哲学家"] },
@@ -791,7 +787,6 @@ window.TR_DATA = (function () {
     { id: "ext-grc-07", cult: "grc", cat: 'civ', ago: 1846, imp: 1, title: "《沉思录》", en: "Meditations", desc: "哲学家皇帝马可·奥勒留在多瑙河军营中写下斯多葛哲学的巅峰之作，至今仍是全球畅销书。", facts: ["原题并非沉思录，而是写给自己的书", "他是罗马五贤帝中的最后一位"] },
     { id: "ext-grc-08", cult: "grc", cat: 'sci', ago: 2300, imp: 2, title: "欧几里得《几何原本》", en: "Euclid's Elements", desc: "亚历山大城的欧几里得把几何学写成13卷《原本》——从5条公设推出整个几何世界，成为两千年来最成功的教科书。", facts: ["全书仅用圆规与不带刻度的直尺作图", "爱因斯坦幼年的第一本几何启蒙就是它"] },
     { id: "ext-grc-09", cult: "grc", cat: 'civ', ago: 2045, imp: 1, title: "维吉尔《埃涅阿斯纪》", en: "Virgil's Aeneid", desc: "奥古斯都时代，维吉尔以12卷史诗把罗马的建国神话上溯到特洛伊英雄埃涅阿斯——为帝国写下「出生证明」。", facts: ["史诗开篇即「武器与人」，向荷马致敬", "诗人临终仍认为手稿未完，嘱咐焚毁"] },
-    { id: "ext-grc-10", cult: "grc", cat: 'civ', ago: 1489, imp: 2, title: "圣索菲亚大教堂", en: "Hagia Sophia", desc: "查士丁尼皇帝在君士坦丁堡建成「神圣智慧」大教堂，31米直径穹顶悬浮在光里——拜占庭建筑千年巅峰。", facts: ["「穹顶悬于金链自天而降」是当时人的描述", "落成那天皇帝高呼：所罗门，我已胜过你"] },
     { id: "ext-isl-10", cult: "isl", cat: 'civ', ago: 656, imp: 2, title: "帖木儿帝国", en: "Timurid Empire", desc: "跛足的帖木儿从中亚崛起，重建横跨波斯的帝国；其孙兀鲁伯在撒马尔罕建起世界顶级天文台。", facts: ["撒马尔罕的雷吉斯坦广场至今是世界遗产", "兀鲁伯星表测出的恒星位置精度惊人"] },
     { id: "ext-isl-11", cult: "isl", cat: 'art', ago: 672, imp: 2, title: "阿尔罕布拉宫", en: "The Alhambra", desc: "奈斯尔王朝在格拉纳达的红丘上建成阿尔罕布拉宫——蜂窝穹顶、流水庭院，伊斯兰艺术的西境绝唱。", facts: ["墙上铭文写满诗句，被称为「用石头写诗」", "1492年天主教双王在此受降，同年哥伦布启航"] },
     { id: "ext-isl-12", cult: "isl", cat: 'civ', ago: 525, imp: 1, title: "萨非王朝", en: "Safavid Dynasty", desc: "伊斯玛仪一世建立萨非王朝，波斯第三次帝国复兴；阿拔斯大帝时期伊斯法罕「半天下」。", facts: ["伊斯法罕皇家广场是世界最大广场之一", "细密画与地毯工艺在此登峰造极"] },
@@ -859,7 +854,11 @@ window.TR_DATA = (function () {
     { id: 'med', icon: '💊', name: '生命科学的接力',
       steps: ['seed-082', 'seed-084', 'seed-091', 'seed-122'] },
     { id: 'gov', icon: '⚖️', name: '治理与权利的接力',
-      steps: ['seed-051', 'medieval-041'] }
+      steps: ['seed-051', 'medieval-041'] },
+    { id: 'gone', icon: '🌍', name: '人类足迹的接力',
+      steps: ['seed-034', 'seed-037', 'seed-067', 'seed-113', 'contemp-047', 'contemp-034'] },
+    { id: 'wire', icon: '📡', name: '通信的接力',
+      steps: ['seed-075', 'modern-055', 'modern-021', 'ext-sci-03', 'seed-088', 'seed-092'] }
   ];
 
   /* ================= 时代图腾（岸边大形象） =================
