@@ -78,6 +78,10 @@ window.TRScene = (function () {
   let fpsAcc = 0, fpsN = 0, prIdx = 0;        // FPS 自适应画质
   let meteors = [], meteorTimer = 0;          // 星夜流星
   let birthMarker = null, birthLabel = null;  // 时光机：出生时刻标记
+  let ripples = [];                            // 选中河灯时的涟漪扩散环
+  let ripplePool = [];                         // 涟漪对象池
+  let reflectionMeshes = [];                   // 河灯倒影光柱
+  let dayNightLerp = state.dayMode ? 1 : 0;   // 昼夜过渡插值
   let birdGroup = null, birdP = 0.05;         // 白天雁群
   let PR_LEVELS = [1.5, 1.25, 1];
   let glowTex, starTex;
@@ -889,9 +893,26 @@ window.TRScene = (function () {
         g.add(label);
       }
 
+      /* 倒影光柱：灯船正下方的水面上的细长光带 */
+      const refl = new THREE.Mesh(
+        new THREE.PlaneGeometry(size * 0.25, size * 1.8),
+        new THREE.MeshBasicMaterial({
+          map: glowTex, color: cat.color, transparent: true,
+          opacity: state.dayMode ? 0.08 : 0.18, blending: THREE.AdditiveBlending,
+          depthWrite: false, side: THREE.DoubleSide
+        })
+      );
+      refl.rotation.x = -Math.PI / 2;
+      refl.rotation.z = Math.atan2(pos.tx, pos.tz) + Math.PI / 2;
+      refl.position.set(pos.x + pos.nx * side * lat, waterYAt(p) + 0.15, pos.z + pos.nz * side * lat);
+      refl.userData = { isRefl: true, baseOp: state.dayMode ? 0.06 : 0.18 };
+      world.add(refl);
+      reflectionMeshes.push(refl);
+
       world.add(g);
       lanterns.push({ ev: ev, group: g, glow: glow, label: label,
-                      p: p, size: size, phase: (hashStr(ev.id) % 628) / 100 });
+                      p: p, size: size, eraIdx: eraIdxOf(ev.ago, eras),
+                      phase: (hashStr(ev.id) % 628) / 100 });
     });
 
     /* --- 🐉 中国支流：中华文明事件分入平行支流（与世界主线对照） --- */
@@ -1054,9 +1075,26 @@ window.TRScene = (function () {
           g.add(label);
         }
 
+        /* 倒影光带 */
+        const rt = bCurve.getTangentAt(Math.min(0.999, bp));
+        const refl = new THREE.Mesh(
+          new THREE.PlaneGeometry(size * 0.25, size * 1.8),
+          new THREE.MeshBasicMaterial({
+            map: glowTex, color: cat.color, transparent: true,
+            opacity: state.dayMode ? 0.06 : 0.15, blending: THREE.AdditiveBlending,
+            depthWrite: false, side: THREE.DoubleSide
+          })
+        );
+        refl.rotation.x = -Math.PI / 2;
+        refl.rotation.z = Math.atan2(rt.x, rt.z) + Math.PI / 2;
+        refl.position.set(g.position.x, yB(bp) + 0.15, g.position.z);
+        refl.userData = { isRefl: true };
+        world.add(refl);
+        reflectionMeshes.push(refl);
+
         world.add(g);
         lanterns.push({ ev: ev, group: g, glow: glow, label: label,
-                        p: progressFor(ev.ago), size: size,
+                        p: progressFor(ev.ago), size: size, eraIdx: eraIdxOf(ev.ago, eras),
                         phase: (hashStr(ev.id + 'b') % 628) / 100 });
       });
     })();
@@ -1409,6 +1447,23 @@ window.TRScene = (function () {
         c.s.position.y = c.y + Math.sin(ts2 * 0.02 + c.ph) * 3;
       });
 
+      /* 倒影闪烁 */
+    reflectionMeshes.forEach(function (r) {
+      if (!r.visible) return;
+      r.material.opacity = (r.userData.baseOp || 0.15) * (0.8 + 0.3 * Math.sin(now / 480 + r.position.x * 0.1));
+    });
+
+    /* 💧 涟漪扩散更新 */
+      ripplePool.forEach(function (rp) {
+        if (!rp.visible) return;
+        rp.userData.age += dt;
+        const t = rp.userData.age / rp.userData.maxAge;
+        if (t >= 1) { rp.visible = false; return; }
+        const scale = 1 + t * 8;
+        rp.scale.set(scale, scale, 1);
+        rp.material.opacity = 0.7 * (1 - t);
+      });
+
       /* 🌠 流星：随机生成、划落后熄灭（仅星夜） */
       meteorTimer -= dt;
       if (!state.dayMode && meteorTimer <= 0) {
@@ -1726,10 +1781,34 @@ window.TRScene = (function () {
       beacon.position.set(pos.x, waterYAt(m.p) + 0.4, pos.z);
       world.add(beacon);
       beaconT = 0;
+      spawnRipple(pos, D.CATS[m.ev.cat].color);
       emitFly();
     }
     if (quizCorrect && cb.onQuiz) cb.onQuiz({ correct: true, id: id });
     if (cb.onSelect) cb.onSelect({ type: 'event', id: id });
+  }
+
+  /* 💧 选中河灯时在水面扩散涟漪环 */
+  function spawnRipple(pos, color) {
+    let rp = ripplePool.filter(function (r) { return !r.visible; })[0];
+    if (!rp) {
+      if (ripplePool.length >= 8) return;
+      const geo = new THREE.RingGeometry(0.8, 1.0, 32);
+      const mat = new THREE.MeshBasicMaterial({
+        color: color, transparent: true, opacity: 0,
+        side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false
+      });
+      rp = new THREE.Mesh(geo, mat);
+      rp.rotation.x = -Math.PI / 2;
+      rp.userData = { age: 0, maxAge: 1.8 };
+      world.add(rp);
+      ripplePool.push(rp);
+    }
+    rp.material.color.set(color);
+    rp.position.set(pos.x, waterYAt(0.5) + 0.3, pos.z);
+    rp.userData.age = 0;
+    rp.visible = true;
+    rp.material.opacity = 0.7;
   }
 
   /* 🎂 时光机：在"你出生那年"的河段放置白色标记环 */
