@@ -14,7 +14,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="theme-color" content="#04060c">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css?v=river35">
+  <link rel="stylesheet" href="css/style.css?v=river36">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏞️</text></svg>">
   <script type="application/ld+json">
   {
@@ -39,7 +39,7 @@
     <div style="color:#5b6474;font-size:11px;">正在展开 138 亿年……</div>
   </div>
   <style>@keyframes loadFloat{50%{transform:translateY(-10px)}}</style>
-  <div id="scene-container"></div>
+  <div id="scene-container" role="application" aria-label="时间星河三维场景：拖拽旋转，滚轮缩放，单击河灯查看详情"></div>
   <div id="vignette"></div>
 
   <!-- 顶部栏 -->
@@ -49,21 +49,21 @@
       <p>一条奔流 138 亿年的大河 · 源头是大爆炸，入海口是今天</p>
     </div>
     <nav id="top-actions">
-      <button id="btn-pause" title="时间凝固：水流、波浪、河灯与飞览全部暂停（空格）">⏸ 暂停</button>
-      <button id="btn-fly" title="航拍镜头从源头飞到入海口；飞览中再点=暂停飞览">🎬 飞览全程</button>
-      <button id="btn-speed" title="飞览速度：慢 / 标准 / 快">⚡ 1×</button>
-      <button id="btn-doc" title="纪录片模式：自动飞览 + 纪元字幕 + 语音解说">📽️ 纪录片</button>
-      <button id="btn-overview" title="升到高空看整条大河的蜿蜒全貌">🗺 全河鸟瞰</button>
-      <button id="btn-quiz" title="寻宝问答：按线索找到目标河灯，连对计分">🏆 问答</button>
-      <button id="btn-day" title="切换白天 / 星夜两种渲染氛围">🌙 星夜</button>
-      <button id="btn-voice" title="语音导览：飞览时播报纪元，单击河灯播报事件">🎙 导览</button>
-      <button id="btn-sound" title="环境流水声（合成，可关闭）">🔊 水声</button>
-      <button id="btn-rec" title="录制飞览全程为 webm 视频，到达入海口后自动下载">🎥 录制</button>
-      <button id="btn-shot" title="把当前画面存为 PNG 图片">🖼️ 画面</button>
-      <button id="btn-atlas" data-modal="modal-atlas" title="浏览全部事件（按时代分卷）">📚 图鉴</button>
+      <button id="btn-pause" aria-label="暂停或继续时间流动" title="时间凝固：水流、波浪、河灯与飞览全部暂停（空格）">⏸ 暂停</button>
+      <button id="btn-fly" aria-label="开始或继续飞览全程" title="航拍镜头从源头飞到入海口；飞览中再点=暂停飞览">🎬 飞览全程</button>
+      <button id="btn-speed" aria-label="切换飞览速度" title="飞览速度：慢 / 标准 / 快">⚡ 1×</button>
+      <button id="btn-doc" aria-label="开启纪录片模式" title="纪录片模式：自动飞览 + 纪元字幕 + 语音解说">📽️ 纪录片</button>
+      <button id="btn-overview" aria-label="切换全河鸟瞰视角" title="升到高空看整条大河的蜿蜒全貌">🗺 全河鸟瞰</button>
+      <button id="btn-quiz" aria-label="开启寻宝问答" title="寻宝问答：按线索找到目标河灯，连对计分">🏆 问答</button>
+      <button id="btn-day" aria-label="切换白天或星夜模式" title="切换白天 / 星夜两种渲染氛围">🌙 星夜</button>
+      <button id="btn-voice" aria-label="开启或关闭语音导览" title="语音导览：飞览时播报纪元，单击河灯播报事件">🎙 导览</button>
+      <button id="btn-sound" aria-label="开启或关闭环境水声" title="环境流水声（合成，可关闭）">🔊 水声</button>
+      <button id="btn-rec" aria-label="开始或停止录制视频" title="录制飞览全程为 webm 视频，到达入海口后自动下载">🎥 录制</button>
+      <button id="btn-shot" aria-label="保存当前画面为图片" title="把当前画面存为 PNG 图片">🖼️ 画面</button>
+      <button id="btn-atlas" aria-label="打开长河图鉴" data-modal="modal-atlas" title="浏览全部事件（按时代分卷）">📚 图鉴</button>
       <button data-modal="modal-science" title="长河隐喻 / 深时 / 宇宙日历">📖 科普课堂</button>
       <button data-modal="modal-help" title="操作说明">❓ 帮助</button>
-      <button id="btn-fs" title="全屏显示 / 退出全屏">⛶ 全屏</button>
+      <button id="btn-fs" aria-label="全屏显示" title="全屏显示 / 退出全屏">⛶ 全屏</button>
     </nav>
   </header>
 
@@ -71,7 +71,7 @@
   <div id="rec-chip" class="hidden"><i></i>REC</div>
 
   <!-- 问答卡片 -->
-  <div id="quiz-card" class="hidden">
+  <div id="quiz-card" role="dialog" aria-label="寻宝问答" class="hidden">
     <div id="quiz-scope">
       <button data-scope="all" class="on">🌏 全部</button>
       <button data-scope="cn">🐉 中国</button>
@@ -86,9 +86,9 @@
     <div id="quiz-hints"></div>
     <div id="quiz-feedback"></div>
     <div id="quiz-actions">
-      <button id="btn-quiz-hint">💡 提示</button>
-      <button id="btn-quiz-wrong" title="重练答错的题">❗ 错题重练</button>
-      <button id="btn-quiz-skip">⏭ 跳过</button>
+      <button id="btn-quiz-hint" aria-label="提示：飞往该河段">💡 提示</button>
+      <button id="btn-quiz-wrong" aria-label="重练答错的题" title="重练答错的题">❗ 错题重练</button>
+      <button id="btn-quiz-skip" aria-label="跳过这一题">⏭ 跳过</button>
     </div>
   </div>
 
@@ -103,20 +103,20 @@
         <li><b>🖱️</b> 拖拽环绕 · 滚轮缩放 · 按住空格+拖拽平移</li>
         <li><b>🏆</b> 玩「问答」测测历史感，点亮全部 576 盏河灯</li>
       </ul>
-      <button id="btn-onboard-go">🌊 开始探索</button>
+      <button id="btn-onboard-go" aria-label="开始探索滚滚长河">🌊 开始探索</button>
     </div>
   </div>
 
   <!-- 年份 HUD -->
   <div id="hud">
-    <div id="hud-year">138亿年前</div>
-    <div id="hud-sub">🎬 准备从源头起飞……</div>
+    <div id="hud-year" role="timer" aria-live="polite">138亿年前</div>
+    <div id="hud-sub" aria-live="polite">🎬 准备从源头起飞……</div>
     <div id="hud-progress"><i></i></div>
     <div id="hud-preview" class="hidden"></div>
   </div>
 
   <!-- 移动端面板开关 -->
-  <button id="panel-toggle" title="展开 / 收起控制面板">⚙️</button>
+  <button id="panel-toggle" aria-label="展开或收起控制面板" title="展开 / 收起控制面板">⚙️</button>
 
   <!-- 左侧控制面板 -->
   <aside id="side-panel">
@@ -133,11 +133,11 @@
       <div id="tour-title"></div>
       <div id="tour-stepnum"></div>
       <div id="tour-ctrl">
-        <button id="btn-tour-prev" title="上一站">◀</button>
-        <button id="btn-tour-auto" title="自动播放：每站停留 9 秒">▶ 自动</button>
-        <button id="btn-tour-next" title="下一站">▶</button>
+        <button id="btn-tour-prev" aria-label="教学路线上一站" title="上一站">◀</button>
+        <button id="btn-tour-auto" aria-label="自动播放教学路线" title="自动播放：每站停留 9 秒">▶ 自动</button>
+        <button id="btn-tour-next" aria-label="教学路线下一站" title="下一站">▶</button>
       </div>
-      <button id="btn-tour-exit" title="退出路线">✕ 退出路线</button>
+      <button id="btn-tour-exit" aria-label="退出教学路线" title="退出路线">✕ 退出路线</button>
     </div>
 
     <h3>🗓 纪元年表 · 点击飞往</h3>
@@ -145,7 +145,7 @@
 
     <h3>🔍 搜索事件</h3>
     <div id="search-box">
-      <input type="text" id="search-input" placeholder="如：恐龙 / 登月 / 秦" autocomplete="off">
+      <input type="text" id="search-input" aria-label="搜索事件：输入关键词如恐龙、登月、秦" role="combobox" aria-expanded="false" placeholder="如：恐龙 / 登月 / 秦" autocomplete="off">
       <div id="search-drop" class="hidden"></div>
     </div>
 
@@ -154,11 +154,11 @@
     <div id="ev-count">—</div>
     <div id="explored">🧭 已探索 0 个事件</div>
     <canvas id="rings-canvas" width="204" height="54"></canvas>
-    <button id="btn-report" title="生成可保存的探索报告图片">📊 探索报告</button>
+    <button id="btn-report" aria-label="生成探索报告" title="生成可保存的探索报告图片">📊 探索报告</button>
     <div id="fav-list"></div>
     <button id="today-lantern" class="hidden" title="点击直达这盏河灯">🌟 今日之灯</button>
-    <button id="btn-birth" title="输入出生年份，看看那年河上的世界">🎂 时光机 · 你出生那年</button>
-    <button id="btn-random" title="随机飞往一盏还没探索过的河灯">🎲 随机漫游</button>
+    <button id="btn-birth" aria-label="打开时光机" title="输入出生年份，看看那年河上的世界">🎂 时光机 · 你出生那年</button>
+    <button id="btn-random" aria-label="随机飞往一盏河灯" title="随机飞往一盏还没探索过的河灯">🎲 随机漫游</button>
 
     <h3>👁 显示</h3>
     <label class="toggle"><input type="checkbox" id="tg-labels" checked>纪元 / 河灯标签</label>
@@ -166,7 +166,7 @@
   </aside>
 
   <!-- 右侧信息面板 -->
-  <aside id="detail-panel" class="hidden">
+  <aside id="detail-panel" role="complementary" aria-label="事件详情面板" class="hidden">
     <button id="btn-close-info" title="关闭">✕</button>
     <div id="panel-body"></div>
   </aside>
@@ -190,7 +190,7 @@
   </div>
 
   <!-- 小地图 -->
-  <canvas id="minimap" width="680" height="472" title="小地图：金点=镜头 · 白点=视线落点 · 点击任意处跳转"></canvas>
+  <canvas id="minimap" role="img" aria-label="小地图：显示整条长河布局，金点为当前位置，点击任意位置跳转" width="680" height="472" title="小地图：金点=镜头 · 白点=视线落点 · 点击任意处跳转"></canvas>
 
   <!-- 科普课堂 -->
   <div class="modal hidden" id="modal-science">
@@ -247,7 +247,7 @@
       <p class="src-note" style="margin-bottom:14px;">输入你的出生年份，镜头将飞到那年的河段，替你点亮一枚白环——看看你出生时，世界正发生什么。</p>
       <input type="number" id="birth-year" min="1900" max="2026" placeholder="如 1990" style="width:130px; padding:10px; font-size:16px; text-align:center; background:rgba(255,255,255,0.06); color:var(--text); border:1px solid rgba(255,255,255,0.15); border-radius:10px; outline:none;">
       <div style="margin-top:16px;">
-        <button id="btn-birth-go" style="padding:10px 26px; font-size:14px; font-weight:700; color:#1a1408; background:linear-gradient(90deg,#ffd27f,#ff9d5c); border:none; border-radius:10px; cursor:pointer;">🚀 出发</button>
+        <button id="btn-birth-go" aria-label="出发前往出生年份" style="padding:10px 26px; font-size:14px; font-weight:700; color:#1a1408; background:linear-gradient(90deg,#ffd27f,#ff9d5c); border:none; border-radius:10px; cursor:pointer;">🚀 出发</button>
       </div>
     </div>
   </div>
@@ -259,7 +259,7 @@
       <h2>📊 探索报告</h2>
       <canvas id="report-canvas" width="1000" height="620" style="max-width:100%; border-radius:12px;"></canvas>
       <div style="margin-top:14px;">
-        <button id="btn-report-save" style="padding:10px 24px; font-size:14px; font-weight:700; color:#1a1408; background:linear-gradient(90deg,#ffd27f,#ff9d5c); border:none; border-radius:10px; cursor:pointer;">⬇ 保存图片</button>
+        <button id="btn-report-save" aria-label="保存探索报告图片" style="padding:10px 24px; font-size:14px; font-weight:700; color:#1a1408; background:linear-gradient(90deg,#ffd27f,#ff9d5c); border:none; border-radius:10px; cursor:pointer;">⬇ 保存图片</button>
       </div>
     </div>
   </div>
@@ -295,10 +295,10 @@
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>
-  <script src="js/data.js?v=river35"></script>
-  <script src="js/textures.js?v=river35"></script>
-  <script src="js/scene.js?v=river35"></script>
-  <script src="js/app.js?v=river35"></script>
+  <script src="js/data.js?v=river36"></script>
+  <script src="js/textures.js?v=river36"></script>
+  <script src="js/scene.js?v=river36"></script>
+  <script src="js/app.js?v=river36"></script>
 <script>if(window.TRScene&&window.TRScene.isReady()){document.getElementById("loading-screen").style.opacity=0;document.getElementById("loading-screen").style.transition="opacity .6s";setTimeout(function(){document.getElementById("loading-screen").style.display="none"},700)}</script>
 <script>
 window.addEventListener('load', function () {
