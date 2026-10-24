@@ -178,10 +178,23 @@
         (g.era || '大河尽头') + ' · 河灯 ' + g.lit + '/' + g.total;
     }
     $('hud-progress').firstElementChild.style.width = (g.pct * 100).toFixed(1) + '%';
-    /* 纪元年表：高亮当前所在纪元 */
+    /* 纪元年表：高亮当前所在纪元 + 自动滚动跟随 */
     document.querySelectorAll('.era-item').forEach(function (el, i) {
       el.classList.toggle('active', i === g.eraIdx);
     });
+    if (g.eraIdx >= 0) {
+      const activeEl = document.querySelectorAll('.era-item')[g.eraIdx];
+      if (activeEl) {
+        const nav = document.getElementById('era-nav');
+        const elTop = activeEl.offsetTop;
+        const elBottom = elTop + activeEl.offsetHeight;
+        const navTop = nav.scrollTop;
+        const navBottom = navTop + nav.clientHeight;
+        if (elTop < navTop + 10 || elBottom > navBottom - 10) {
+          nav.scrollTo({ top: elTop - nav.clientHeight / 2 + activeEl.offsetHeight / 2, behavior: 'smooth' });
+        }
+      }
+    }
     /* 语音导览：进入新纪元时播报 */
     if (voiceOn && S.state.flying && !S.state.paused && g.eraIdx >= 0 && g.eraIdx !== lastEraSpoken) {
       lastEraSpoken = g.eraIdx;
