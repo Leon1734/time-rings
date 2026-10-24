@@ -1297,6 +1297,9 @@
       jumpLantern(-1);
     } else if (e.key === '?') {
       $('modal-help').classList.remove('hidden');
+    } else if (e.key === 'h' || e.key === 'H') {
+      const hk = $('hotkey-card');
+      hk.classList.toggle('hidden');
     } else if (e.key === 'ArrowRight') {
       S.nudge(e.shiftKey ? 0.03 : 0.008);
       syncButtons();
@@ -1759,6 +1762,14 @@
     renderFavs();
     setupTodayLantern();
     restorePrefs();
+    /* 首次访问：3 秒后弹出快捷键速查卡，8 秒后自动隐藏 */
+    setTimeout(function () {
+      const hk = $('hotkey-card');
+      if (!hk || localStorage.getItem('tr-hotkey-seen')) return;
+      hk.classList.remove('hidden');
+      try { localStorage.setItem('tr-hotkey-seen', '1'); } catch (e) {}
+      setTimeout(function () { hk.classList.add('hidden'); }, 8000);
+    }, 3000);
     /* 首次访问：引导浮层 */
     const params = new URLSearchParams(location.search);
     try {

@@ -663,3 +663,24 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 
 #fav-list { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 #fav-list:empty { display: none; }
+
+
+/* ================= 快捷键速查卡 ================= */
+#hotkey-card {
+  position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+  z-index: 80; width: 220px;
+  background: rgba(8,12,20,0.92); border: 1px solid rgba(255,210,127,0.3);
+  border-radius: 12px; padding: 14px 16px; backdrop-filter: blur(8px);
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  transition: opacity .3s, transform .3s;
+}
+#hotkey-card.hidden { display: none; }
+#hotkey-card b { display: block; font-size: 13px; color: var(--gold); margin-bottom: 8px; }
+.hotkey-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+.hotkey-row kbd {
+  display: inline-block; min-width: 42px; text-align: center;
+  padding: 2px 6px; font-size: 10.5px; font-family: monospace;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px; color: var(--gold); white-space: nowrap;
+}
+.hotkey-row span { font-size: 11.5px; color: #b8b2a6; }
