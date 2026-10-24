@@ -16,6 +16,21 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="css/style.css?v=river35">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏞️</text></svg>">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "滚滚长河",
+    "alternateName": "Time River",
+    "description": "把宇宙138亿年铺成一条奔流的大河：源头是大爆炸，入海口是今天。664个历史事件的交互式三维科普演示。",
+    "url": "https://leon1734.github.io/time-rings/",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Any",
+    "offers": { "@type": "Offer", "price": "0" },
+    "inLanguage": "zh-CN",
+    "author": { "@type": "Person", "name": "Leon1734" }
+  }
+  </script>
 </head>
 <body>
   <div id="loading-screen" style="position:fixed;inset:0;z-index:500;background:#04060c;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
@@ -272,6 +287,11 @@
   </div>
 
   <div id="error-banner" class="hidden"></div>
+  <noscript>
+    <div style="position:fixed;inset:0;background:#04060c;display:flex;align-items:center;justify-content:center;z-index:999;color:#e8e2d4;font-size:15px;text-align:center;padding:20px;">
+      🏞️ 滚滚长河需要启用 JavaScript 才能运行。<br>请在浏览器设置中开启 JavaScript 后刷新页面。
+    </div>
+  </noscript>
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>

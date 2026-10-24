@@ -497,7 +497,7 @@ window.TRScene = (function () {
   function buildWorld() {
     if (world) { scene.remove(world); disposeGroup(world); }
     world = new THREE.Group();
-    lanterns = []; sprays = []; eraLabels = [];
+    lanterns = []; sprays = []; eraLabels = []; reflectionMeshes = [];
     beacon = null; camTween = null;
 
     const eras = D.ERAS[state.mode];

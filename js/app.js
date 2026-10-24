@@ -19,8 +19,19 @@
 
   /* ================= 启动自检 ================= */
   if (!window.THREE) {
-    $('error-banner').textContent = '⚠️ three.js 加载失败，请确认 js/lib/three.min.js 存在';
-    $('error-banner').classList.remove('hidden');
+    const ls = document.getElementById('loading-screen');
+    if (ls) ls.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">⚠️</div><div style="color:#e8e2d4;font-size:15px;text-align:center;padding:0 30px;line-height:1.7;">三维引擎加载失败。<br>请检查网络连接后刷新，<br>或尝试使用 Chrome / Edge / Firefox 最新版。</div>';
+    return;
+  }
+  /* WebGL 支持检测 */
+  try {
+    const testCanvas = document.createElement('canvas');
+    if (!testCanvas.getContext('webgl') && !testCanvas.getContext('experimental-webgl')) {
+      throw new Error('WebGL not supported');
+    }
+  } catch (e) {
+    const ls2 = document.getElementById('loading-screen');
+    if (ls2) ls2.innerHTML = '<div style="font-size:40px;margin-bottom:12px;">🖥️</div><div style="color:#e8e2d4;font-size:15px;text-align:center;padding:0 30px;line-height:1.7;">当前浏览器不支持 WebGL。<br>请更新浏览器或启用硬件加速。</div>';
     return;
   }
   window.addEventListener('error', function (e) {
