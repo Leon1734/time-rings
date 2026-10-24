@@ -18,6 +18,12 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏞️</text></svg>">
 </head>
 <body>
+  <div id="loading-screen" style="position:fixed;inset:0;z-index:500;background:#04060c;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+    <div style="font-size:42px;animation:loadFloat 2s ease-in-out infinite;">🏞️</div>
+    <div style="color:#ffd27f;font-size:15px;letter-spacing:3px;">滚滚长河</div>
+    <div style="color:#5b6474;font-size:11px;">正在展开 138 亿年……</div>
+  </div>
+  <style>@keyframes loadFloat{50%{transform:translateY(-10px)}}</style>
   <div id="scene-container"></div>
   <div id="vignette"></div>
 
@@ -260,5 +266,12 @@
   <script src="js/textures.js?v=river34"></script>
   <script src="js/scene.js?v=river34"></script>
   <script src="js/app.js?v=river34"></script>
+<script>if(window.TRScene&&window.TRScene.isReady()){document.getElementById("loading-screen").style.opacity=0;document.getElementById("loading-screen").style.transition="opacity .6s";setTimeout(function(){document.getElementById("loading-screen").style.display="none"},700)}</script>
+<script>
+window.addEventListener('load', function () {
+  var ls = document.getElementById('loading-screen');
+  if (ls) { ls.style.opacity = 0; ls.style.transition = 'opacity .6s'; setTimeout(function(){ls.style.display='none'},700); }
+});
+</script>
 </body>
 </html>
