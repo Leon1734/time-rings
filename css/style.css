@@ -702,3 +702,16 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 
 /* 按钮微交互：图例/年表点击反馈 */
 .legend-item:active, .era-item:active, .tour-item:active { transform: scale(0.97); transition-duration: .06s; }
+
+/* 搜索下拉：回车选中项样式 */
+#search-drop button.active {
+  background: rgba(255,210,127,0.12); border-left: 2px solid var(--gold);
+}
+/* 详情面板关闭按钮统一风格 */
+#btn-close-info {
+  width: 28px; height: 28px; border-radius: 8px; font-size: 14px;
+  background: rgba(255,255,255,0.06); transition: all .15s;
+}
+#btn-close-info:hover { background: rgba(255,210,127,0.15); color: var(--gold); }
+/* 面板滚动条细化为 4px */
+#side-panel::-webkit-scrollbar, #detail-panel::-webkit-scrollbar, .modal-card::-webkit-scrollbar { width: 4px; }

@@ -1347,11 +1347,26 @@
   /* ================= 搜索 ================= */
   const searchInput = $('search-input');
   searchInput.addEventListener('input', doSearch);
+  let searchSel = -1;                    // 搜索下拉键盘选中索引
   searchInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      const first = $('search-drop').querySelector('[data-id]');
-      if (first) { jumpTo(first.dataset.id); }
-    } else if (e.key === 'Escape') { clearSearch(); }
+    const items = Array.from($('search-drop').querySelectorAll('[data-id]'));
+    if (!items.length) return;
+    const markActive = function () {
+      items.forEach(function (b, i) { b.classList.toggle('active', i === searchSel); });
+      if (searchSel >= 0 && items[searchSel]) items[searchSel].scrollIntoView({ block: 'nearest' });
+    };
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      searchSel = Math.min(items.length - 1, searchSel + 1);
+      markActive();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      searchSel = Math.max(0, searchSel - 1);
+      markActive();
+    } else if (e.key === 'Enter') {
+      const target = searchSel >= 0 ? items[searchSel] : items[0];
+      if (target) { searchSel = -1; jumpTo(target.dataset.id); }
+    } else if (e.key === 'Escape') { searchSel = -1; clearSearch(); }
   });
   document.addEventListener('click', function (e) {
     if (!e.target.closest('#search-box')) $('search-drop').classList.add('hidden');
@@ -1360,6 +1375,7 @@
   function doSearch() {
     const q = searchInput.value.trim().toLowerCase();
     const drop = $('search-drop');
+    searchSel = -1;                      // 输入变化时重置键盘选中
     if (!q) { clearSearch(); return; }
     const hits = D.EVENTS.map(function (e) {
       let score = 0;
