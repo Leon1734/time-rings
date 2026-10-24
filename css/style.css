@@ -53,6 +53,7 @@ body {
   backdrop-filter: blur(8px); transition: all .18s;
 }
 #top-actions button:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-1px); }
+#top-actions button:active { transform: translateY(0) scale(0.97); transition-duration: .06s; }
 #top-actions button.on { border-color: var(--gold); color: var(--gold); background: rgba(255,210,127,0.12); }
 
 /* ================= 录制指示灯 ================= */
@@ -76,9 +77,9 @@ body {
   border-radius: 14px; padding: 14px 18px;
   backdrop-filter: blur(10px);
   box-shadow: 0 0 30px rgba(255,180,80,0.18);
-  animation: slideDown .3s ease;
+  animation: slideDown .35s cubic-bezier(.2,1.2,.4,1);
 }
-@keyframes slideDown { from { opacity: 0; transform: translate(-50%, -12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes slideDown { from { opacity: 0; transform: translate(-50%, -16px) scale(.95); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 #quiz-stats { font-size: 11px; color: var(--dim); margin-bottom: 6px; }
 #quiz-q { font-size: 15px; color: var(--text); margin-bottom: 8px; }
 #quiz-q b { color: var(--gold); }
@@ -136,6 +137,11 @@ body {
 #side-panel h3 {
   font-size: 12px; color: var(--dim); font-weight: 600;
   margin: 14px 0 8px; letter-spacing: 1px;
+  position: relative; padding-bottom: 5px;
+}
+#side-panel h3::after {
+  content: ""; position: absolute; bottom: 0; left: 0; width: 32px; height: 1px;
+  background: linear-gradient(90deg, rgba(255,210,127,0.4), transparent);
 }
 #side-panel h3:first-child { margin-top: 0; }
 
@@ -228,6 +234,7 @@ body {
 /* ================= 右侧信息面板 ================= */
 #detail-panel {
   position: fixed; right: 14px; top: 96px; bottom: 266px; width: 328px;
+  animation: panelIn .3s cubic-bezier(.25,1,.35,1);
   background: var(--panel); border: 1px solid var(--panel-border);
   border-radius: 14px; padding: 18px;
   backdrop-filter: blur(10px);
@@ -326,6 +333,7 @@ body {
 /* ================= 底部小知识 ================= */
 #ticker {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  animation: tickerIn .6s .5s cubic-bezier(.2,1,.4,1) both;
   width: min(760px, 90vw); text-align: center;
   background: var(--panel); border: 1px solid var(--panel-border);
   border-bottom: none; border-radius: 12px 12px 0 0;
@@ -378,9 +386,11 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 .hidden { display: none !important; }
 
 /* ================= 滚动条与响应式 ================= */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(255,210,127,0.2); border-radius: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(255,210,127,0.25); border-radius: 3px; transition: background .2s; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,210,127,0.4); }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); border-radius: 3px; }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,210,127,0.25) rgba(255,255,255,0.02); }
 
 @media (max-width: 900px) {
   #side-panel { width: 190px; }
@@ -684,3 +694,11 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   border-radius: 4px; color: var(--gold); white-space: nowrap;
 }
 .hotkey-row span { font-size: 11.5px; color: #b8b2a6; }
+
+@keyframes tickerIn { from { opacity: 0; transform: translateX(-50%) translateY(100%); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* 面板滑入 keyframe（共用） */
+@keyframes panelIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+
+/* 按钮微交互：图例/年表点击反馈 */
+.legend-item:active, .era-item:active, .tour-item:active { transform: scale(0.97); transition-duration: .06s; }
