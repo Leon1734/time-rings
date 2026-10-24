@@ -797,7 +797,8 @@
     try {
       localStorage.setItem(PREF_KEY, JSON.stringify({
         mode: S.state.mode, day: S.state.dayMode, voice: voiceOn,
-        labels: S.state.showLabels, best: quizBest
+        labels: S.state.showLabels, best: quizBest,
+        flyP: S.state.flyP
       }));
     } catch (e) {}
   }
@@ -826,6 +827,21 @@
     if (pf.mode && pf.mode !== 'deep' && D.ERAS[pf.mode]) {
       const b = document.querySelector('#mode-seg button[data-mode="' + pf.mode + '"]');
       if (b) b.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }
+    /* 恢复上次浏览位置（在 startFly 之后覆盖） */
+    if (pf.flyP !== undefined && pf.flyP > 0.01 && pf.flyP < 0.99) {
+      setTimeout(function () {
+        S.state.flyP = pf.flyP;
+        S.state.flying = false;
+        S.state.paused = true;
+        const cam = S._dbg().curve.getPointAt(pf.flyP);
+        const tn = S._dbg().curve.getTangentAt(pf.flyP);
+        const n = new THREE.Vector3(-tn.z, 0, tn.x).normalize();
+        S._dbg().camera.position.set(cam.x + n.x * 120, 190, cam.z + n.z * 120);
+        S._dbg().controls.target.set(cam.x, 2, cam.z);
+        S._dbg().controls.update();
+        syncButtons();
+      }, 800);
     }
   }
 
@@ -1353,6 +1369,8 @@
       .sort(function (a, b) { return b.score - a.score || a.e.ago - b.e.ago; })
       .map(function (x) { return x.e; });
     S.setSearch(new Set(hits.map(function (e) { return e.id; })));
+    /* 🔍 聚焦模式：非匹配河灯半透明 */
+    S.setDimNonMatching(true);
     if (hits.length) {
       drop.innerHTML = hits.slice(0, 8).map(function (e) {
         return '<button data-id="' + e.id + '"><b>' + esc(e.title) + '</b><span>' +
@@ -1375,6 +1393,7 @@
   function clearSearch() {
     $('search-drop').classList.add('hidden');
     if (S.state.searchSet) S.setSearch(null);
+    S.setDimNonMatching(false);
   }
 
   /* ================= 📽️ 纪录片模式 ================= */
