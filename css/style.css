@@ -747,3 +747,51 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   width: 5px; height: 5px; border-radius: 50%; flex: none;
 }
 #minimap { position: relative; }
+
+/* ================= 📖 纪元探索器 ================= */
+.era-position { margin: 10px 0 14px; }
+.era-pos-bar {
+  height: 8px; border-radius: 4px; background: rgba(255,255,255,0.06);
+  position: relative; overflow: visible;
+}
+.era-pos-marker {
+  position: absolute; top: -2px; height: 12px; border-radius: 6px;
+  box-shadow: 0 0 8px var(--hc, rgba(255,210,127,0.5));
+  animation: eraPulse 2s ease-in-out infinite;
+}
+@keyframes eraPulse { 50% { box-shadow: 0 0 14px var(--hc); } }
+.era-pos-labels {
+  display: flex; justify-content: space-between; margin-top: 4px;
+  font-size: 9.5px; color: var(--dim);
+}
+.era-key-events { display: flex; flex-direction: column; gap: 4px; }
+.key-ev {
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+  font-size: 12.5px; cursor: pointer; text-align: left;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; color: var(--text); transition: all .15s;
+}
+.key-ev:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 8%, transparent); }
+.key-ev i { font-style: normal; font-size: 14px; flex: none; }
+.key-ev span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.key-ev b { color: var(--dim); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
+.era-fly-btn {
+  display: block; width: 100%; margin-top: 14px; padding: 12px;
+  font-size: 14px; font-weight: 700; cursor: pointer; text-align: center;
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  border: 2px solid var(--c); border-radius: 12px; color: var(--text);
+  transition: all .2s;
+}
+.era-fly-btn:hover {
+  background: color-mix(in srgb, var(--c) 30%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--c) 40%, transparent);
+  transform: translateY(-1px);
+}
+
+#btn-sharecard {
+  display: block; width: 100%; margin-top: 4px; text-align: left;
+  font-size: 12px; padding: 7px 10px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px; color: var(--text); transition: all .15s;
+}
+#btn-sharecard:hover { border-color: var(--gold); color: var(--gold); }

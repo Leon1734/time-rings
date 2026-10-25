@@ -1232,7 +1232,7 @@
       .map(function (x) { return x.e; });
   }
 
-  /* ---- 纪元卡 ---- */
+  /* ---- 📖 纪元探索器（增强纪元面板） ---- */
   function renderEraPanel(idx) {
     const eras = D.ERAS[S.state.mode];
     const era = eras[idx];
@@ -1241,23 +1241,65 @@
     const evs = D.EVENTS
       .filter(function (e) { return e.ago <= span + 1 && e.ago <= era.from && e.ago >= era.to; })
       .sort(function (a, b) { return b.ago - a.ago; });
+
+    /* 纪元在全景中的位置条 */
+    const pA = Math.min(S.progressOf(era.from), S.progressOf(era.to));
+    const pB = Math.max(S.progressOf(era.from), S.progressOf(era.to));
+    const posL = pA * 100, posW = Math.max(1.5, (pB - pA) * 100);
+
+    /* 距今年代跨度（格式化） */
+    const spanYears = era.from - era.to;
+    const spanText = spanYears >= 1e8 ? (spanYears / 1e8).toFixed(1) + ' 亿年'
+      : spanYears >= 1e4 ? (spanYears / 1e4).toFixed(0) + ' 万年'
+      : spanYears.toLocaleString('zh-CN') + ' 年';
+
+    /* 关键事件（imp≥3 优先，最多 8 条） */
+    const keyEvents = evs.filter(e => e.imp >= 3).concat(evs.filter(e => e.imp === 2)).slice(0, 8);
+
     $('panel-body').innerHTML =
-      heroHtml(era.color, D.eraEmoji(era.name)) +
-      '<div class="tags"><span class="chip era" style="--c:' + era.color + '">🍃 纪元</span></div>' +
+      '<div id="panel-hero" style="--hc:' + era.color + '">' +
+        '<span style="font-size:56px;">' + D.eraEmoji(era.name) + '</span>' +
+      '</div>' +
+      '<div class="tags">' +
+        '<span class="chip era" style="--c:' + era.color + '">🍃 纪元</span>' +
+        '<span class="chip year">' + D.fmtAgo(era.from) + ' ～ ' + (era.to <= 0 ? '今天' : D.fmtAgo(era.to)) + '</span>' +
+        '<span class="chip" style="color:' + era.color + '">⏱ 跨度 ' + spanText + '</span>' +
+      '</div>' +
       '<h2 id="panel-title">' + esc(era.name) + '</h2>' +
-      '<p id="panel-en">' + D.fmtAgo(era.from) + ' ～ ' + (era.to <= 0 ? '今天' : D.fmtAgo(era.to)) + '</p>' +
+      /* 位置条 */
+      '<div class="era-position">' +
+        '<div class="era-pos-bar">' +
+          '<div class="era-pos-marker" style="left:' + posL + '%;width:' + posW + '%;background:' + era.color + '"></div>' +
+        '</div>' +
+        '<div class="era-pos-labels"><span>138亿年前</span><span>今天</span></div>' +
+      '</div>' +
       '<p class="desc">' + esc(era.blurb) + '</p>' +
       (era.long ? '<h3>📖 深度解读</h3><p class="desc long-text">' + esc(era.long) + '</p>' : '') +
-      '<h3>📍 该河段的河灯（' + evs.length + '）</h3><div class="near">' +
-      (evs.length ? evs.map(function (e) {
-        return '<button class="chip link" data-goto="' + e.id + '">' +
-          D.CATS[e.cat].icon + ' ' + esc(e.title) + '</button>';
-      }).join('') : '<span class="dim">这一河段还没有放置河灯</span>') + '</div>';
+      '<h3>📍 关键事件（' + evs.length + ' 盏河灯）</h3>' +
+      '<div class="era-key-events">' +
+        (keyEvents.length ? keyEvents.map(function (e, i) {
+          return '<button class="key-ev" data-goto="' + e.id + '" style="--c:' + D.CATS[e.cat].color + '">' +
+            '<i>' + D.CATS[e.cat].icon + '</i>' +
+            '<span>' + esc(e.title) + '</span>' +
+            '<b>' + D.fmtAgo(e.ago) + '</b>' +
+          '</button>';
+        }).join('') : '<span class="dim">无关键事件</span>') +
+      '</div>' +
+      '<button id="btn-era-fly" class="era-fly-btn" style="--c:' + era.color + '">🚀 穿越到' + esc(era.name) + '</button>';
 
     $('detail-panel').classList.remove('hidden');
     loadWikiImage({ id: 'era-' + S.state.mode + '-' + idx, title: era.name });
     $('detail-panel').querySelectorAll('[data-goto]').forEach(function (b) {
       b.addEventListener('click', function () { S.selectEvent(b.dataset.goto, true); });
+    });
+    const flyBtn = document.getElementById('btn-era-fly');
+    if (flyBtn) flyBtn.addEventListener('click', function () {
+      $('detail-panel').classList.add('hidden');
+      S.clearSelection();
+      const pMid = (pA + pB) / 2;
+      S.seek(pMid);
+      S.togglePause();
+      syncButtons();
     });
   }
 
@@ -1762,6 +1804,116 @@
       b.addEventListener('click', function () { S.selectEvent(b.dataset.goto, true); syncButtons(); });
     });
   }
+
+  /* ================= 📊 分享卡片生成器（1080×1080 品牌卡片） ================= */
+  function drawShareCard() {
+    const cv = document.getElementById('share-canvas');
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const explored = getExplored();
+    const total = D.EVENTS.length;
+    const doneN = Object.keys(explored).length;
+    const pct = total ? Math.round(doneN / total * 100) : 0;
+
+    /* 背景：深空渐变 + 星尘 */
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#060a18'); bg.addColorStop(0.5, '#0a1020'); bg.addColorStop(1, '#04060c');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 200; i++) {
+      ctx.fillStyle = 'rgba(200,215,255,' + (0.04 + (i % 7) * 0.03) + ')';
+      const x = (i * 137) % W, y = (i * 71) % H;
+      ctx.fillRect(x, y, 2, 2);
+    }
+
+    /* 蜿蜒河流剪影 */
+    ctx.beginPath();
+    ctx.moveTo(80, 750);
+    ctx.bezierCurveTo(250, 680, 350, 820, 500, 780);
+    ctx.bezierCurveTo(650, 740, 750, 860, 920, 820);
+    ctx.strokeStyle = 'rgba(30,90,110,0.5)'; ctx.lineWidth = 50; ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(60,150,170,0.3)'; ctx.lineWidth = 25;
+    ctx.stroke();
+
+    /* 河灯微光 */
+    const lampPos = [[200, 715], [350, 755], [500, 778], [650, 760], [800, 815]];
+    lampPos.forEach(function (lp) {
+      const grad = ctx.createRadialGradient(lp[0], lp[1], 0, lp[0], lp[1], 35);
+      grad.addColorStop(0, 'rgba(255,210,127,0.7)');
+      grad.addColorStop(1, 'rgba(255,210,127,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(lp[0], lp[1], 35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff8e0';
+      ctx.beginPath(); ctx.arc(lp[0], lp[1], 5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    /* 标题 */
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd27f';
+    ctx.font = '700 72px "Microsoft YaHei", sans-serif';
+    ctx.fillText('🏞️ 滚滚长河', W / 2, 200);
+    ctx.fillStyle = '#8b93a4';
+    ctx.font = '300 28px "Microsoft YaHei", sans-serif';
+    ctx.fillText('138 亿年 · 从大爆炸到今天', W / 2, 250);
+
+    /* 中央大数字 */
+    ctx.fillStyle = '#e8e2d4';
+    ctx.font = '300 24px "Microsoft YaHei", sans-serif';
+    ctx.fillText('我已点亮', W / 2, 400);
+    ctx.fillStyle = '#ffd27f';
+    ctx.font = '700 140px "Microsoft YaHei", sans-serif';
+    ctx.fillText(String(doneN), W / 2, 540);
+    ctx.fillStyle = '#6b7688';
+    ctx.font = '300 36px "Microsoft YaHei", sans-serif';
+    ctx.fillText('/ ' + total + ' 盏河灯 · ' + pct + '%', W / 2, 590);
+
+    /* 六类覆盖 */
+    const cats = Object.keys(D.CATS);
+    const ringR = 42, ringGap = 68;
+    cats.forEach(function (k, i) {
+      const evs = D.EVENTS.filter(function (e) { return e.cat === k; });
+      const done = evs.filter(function (e) { return explored[e.id]; }).length;
+      const pr = evs.length ? done / evs.length : 0;
+      const cx = W / 2 + (i - 2.5) * ringGap;
+      const cy = 700;
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = D.CATS[k].color;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, ringR, -Math.PI / 2, -Math.PI / 2 + pr * Math.PI * 2); ctx.stroke();
+      ctx.font = '24px "Segoe UI Emoji","Microsoft YaHei"';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#e8e2d4';
+      ctx.fillText(D.CATS[k].icon, cx, cy);
+    });
+
+    /* 底部 */
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#5b6474';
+    ctx.font = '22px "Microsoft YaHei", sans-serif';
+    ctx.fillText('leon1734.github.io/time-rings', W / 2, 960);
+    ctx.fillStyle = 'rgba(91,100,116,0.6)';
+    ctx.font = '18px "Microsoft YaHei", sans-serif';
+    ctx.fillText('把这条长河分享给你的朋友', W / 2, 1000);
+  }
+
+  $('btn-sharecard').addEventListener('click', function () {
+    drawShareCard();
+    $('modal-sharecard').classList.remove('hidden');
+  });
+  $('btn-sharecard-save').addEventListener('click', function () {
+    try {
+      const a = document.createElement('a');
+      a.href = document.getElementById('share-canvas').toDataURL('image/png');
+      a.download = '滚滚长河-探索分享-' + new Date().toISOString().slice(0, 10) + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      pluck(720, 0.1, 0.04);
+    } catch (err) {
+      $('error-banner').textContent = '⚠️ 保存失败：' + err.message;
+      $('error-banner').classList.remove('hidden');
+    }
+  });
 
   /* ================= 📤 进度导出/导入 ================= */
   $('btn-export').addEventListener('click', function () {
