@@ -155,6 +155,11 @@
     <div id="explored">🧭 已探索 0 个事件</div>
     <canvas id="rings-canvas" width="204" height="54"></canvas>
     <button id="btn-report" aria-label="生成探索报告" title="生成可保存的探索报告图片">📊 探索报告</button>
+    <div id="data-io" style="display:flex;gap:4px;margin-top:4px;">
+      <button id="btn-export" aria-label="导出进度" title="导出全部进度为 JSON 文件">📤 导出进度</button>
+      <button id="btn-import" aria-label="导入进度" title="导入之前导出的备份">📥 导入</button>
+      <input type="file" id="import-file" accept=".json" style="display:none;">
+    </div>
     <div id="fav-list"></div>
     <button id="today-lantern" class="hidden" title="点击直达这盏河灯">🌟 今日之灯</button>
     <button id="btn-birth" aria-label="打开时光机" title="输入出生年份，看看那年河上的世界">🎂 时光机 · 你出生那年</button>

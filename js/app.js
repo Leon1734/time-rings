@@ -1720,6 +1720,60 @@
     });
   }
 
+  /* ================= 📤 进度导出/导入 ================= */
+  $('btn-export').addEventListener('click', function () {
+    try {
+      const data = {
+        v: 1, exported: new Date().toISOString(),
+        explored: JSON.parse(localStorage.getItem('tr-explored') || '{}'),
+        achv: JSON.parse(localStorage.getItem('tr-achv') || '{}'),
+        wrong: JSON.parse(localStorage.getItem('tr-wrong') || '[]'),
+        favs: JSON.parse(localStorage.getItem('tr-favs') || '[]'),
+        prefs: JSON.parse(localStorage.getItem('tr-prefs-v1') || '{}'),
+        birth: localStorage.getItem('tr-birth') || null
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '滚滚长河-进度备份-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      pluck(720, 0.1, 0.04);
+    } catch (err) {
+      $('error-banner').textContent = '⚠️ 导出失败：' + err.message;
+      $('error-banner').classList.remove('hidden');
+    }
+  });
+
+  $('btn-import').addEventListener('click', function () {
+    document.getElementById('import-file').click();
+  });
+
+  document.getElementById('import-file').addEventListener('change', function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data.v || !data.explored) throw new Error('不是有效的进度备份文件');
+        ['explored', 'achv', 'wrong', 'favs', 'prefs'].forEach(function (key) {
+          if (data[key]) {
+            const storeKey = { explored: 'tr-explored', achv: 'tr-achv', wrong: 'tr-wrong', favs: 'tr-favs', prefs: 'tr-prefs-v1' }[key];
+            localStorage.setItem(storeKey, JSON.stringify(data[key]));
+          }
+        });
+        if (data.birth) localStorage.setItem('tr-birth', data.birth);
+        pluck(660, 0.12, 0.05);
+        setTimeout(function () { location.reload(); }, 800);
+      } catch (err) {
+        $('error-banner').textContent = '⚠️ 导入失败：' + err.message;
+        $('error-banner').classList.remove('hidden');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
   /* ================= 底部小知识滚动 ================= */
   let tipIdx = Math.floor(Math.random() * D.TIPS.length);
   function showTip() {

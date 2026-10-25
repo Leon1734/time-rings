@@ -715,3 +715,10 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 #btn-close-info:hover { background: rgba(255,210,127,0.15); color: var(--gold); }
 /* 面板滚动条细化为 4px */
 #side-panel::-webkit-scrollbar, #detail-panel::-webkit-scrollbar, .modal-card::-webkit-scrollbar { width: 4px; }
+
+#data-io button {
+  flex: 1; font-size: 11px; padding: 6px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 7px; color: var(--text); transition: all .15s;
+}
+#data-io button:hover { border-color: var(--gold); color: var(--gold); }
