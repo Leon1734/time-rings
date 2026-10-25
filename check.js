@@ -78,6 +78,38 @@ Object.keys(D.ERAS).forEach(k => {
 });
 console.log('🍃 纪元表：deep ' + D.ERAS.deep.length + ' / civ ' + D.ERAS.civ.length + ' / modern ' + D.ERAS.modern.length);
 
+/* ---- DOM id 交叉引用：app.js 引用的 id 是否都存在于 index.html ---- */
+try {
+  const html = fs.readFileSync('index.html', 'utf8');
+  const appJs = fs.readFileSync('js/app.js', 'utf8');
+  const sceneJs = fs.readFileSync('js/scene.js', 'utf8');
+  const allJs = appJs + sceneJs;
+
+  // 动态创建的 id（不需要在 HTML 中存在）
+  const dynamicIds = new Set([
+    'achv-emoji', 'achv-title', 'achv-sub', 'doc-era', 'doc-events',
+    'panel-hero', 'panel-img', 'panel-title', 'panel-en', 'panel-body',
+    'quiz-q', 'quiz-hints', 'quiz-feedback', 'quiz-stats', 'quiz-remain',
+    'tour-title', 'tour-stepnum', 'atlas-list', 'atlas-search',
+    'science-vs-table', 'science-quotes', 'science-faq', 'science-cal-table',
+    'science-cal-note', 'science-cal-foot', 'help-list',
+    'btn-compare', 'btn-compare-exit', 'btn-compare-cancel', 'btn-fav'
+  ]);
+
+  const refs = [...new Set([...allJs.matchAll(/\$\('([\w-]+)'\)/g)].map(m => m[1]))];
+  const missing = refs.filter(id => {
+    if (dynamicIds.has(id)) return false;
+    return !html.includes('id="' + id + '"');
+  });
+  if (missing.length) {
+    err('app.js 引用但 HTML 中不存在的 id: ' + missing.join(', '));
+  } else {
+    console.log('  ✅ DOM id 交叉引用: ' + refs.length + ' 个全部存在');
+  }
+} catch (e) {
+  warn('DOM 交叉检查跳过（' + e.message + '）');
+}
+
 console.log('------------------------');
 if (errors) { console.log('❌ ' + errors + ' 个错误，' + warns + ' 个警告'); process.exit(1); }
 console.log('✅ 体检通过' + (warns ? '（' + warns + ' 个可选警告）' : ''));
