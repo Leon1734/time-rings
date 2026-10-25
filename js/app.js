@@ -177,7 +177,7 @@
       $('hud-sub').textContent = (S.state.paused ? '⏸ 已暂停 · ' : '🎬 飞览全程 · ') +
         (g.era || '大河尽头') + ' · 河灯 ' + g.lit + '/' + g.total;
     }
-    $('hud-progress').firstElementChild.style.width = (g.pct * 100).toFixed(1) + '%';
+    updateEraProgress(g);
     /* 纪元年表：高亮当前所在纪元 + 自动滚动跟随 */
     document.querySelectorAll('.era-item').forEach(function (el, i) {
       el.classList.toggle('active', i === g.eraIdx);
@@ -218,6 +218,32 @@
   function modeSub() {
     const m = D.MODES.filter(function (x) { return x.id === S.state.mode; })[0];
     return '🏞️ ' + m.label + ' · ' + m.sub + ' · ' + S.eventsInMode().length + ' 盏河灯';
+  }
+
+  /* ================= 🎨 纪元彩色进度条 ================= */
+  function buildEraProgressBar() {
+    const bar = $('hud-progress');
+    const eras = D.ERAS[S.state.mode];
+    const span = D.MODES.filter(function (m) { return m.id === S.state.mode; })[0].span;
+    bar.innerHTML = '';  // 清除旧的 <i>
+    let html = '';
+    eras.forEach(function (era, idx) {
+      const pA = Math.min(S.progressOf(era.from), S.progressOf(era.to));
+      const pB = Math.max(S.progressOf(era.from), S.progressOf(era.to));
+      const w = Math.max(0.5, (pB - pA) * 100);
+      html += '<div class="era-seg" data-idx="' + idx + '" style="width:' + w + '%;background:' + era.color + '" title="' + esc(era.name) + '"></div>';
+    });
+    html += '<i></i>';  // 当前进度指示条
+    bar.innerHTML = html;
+  }
+  function updateEraProgress(g) {
+    const segs = document.querySelectorAll('#hud-progress .era-seg');
+    segs.forEach(function (seg, i) {
+      seg.classList.toggle('active', i === g.eraIdx);
+      seg.classList.toggle('lit', g.pct > 0 && i <= g.eraIdx);
+    });
+    const fill = document.querySelector('#hud-progress i');
+    if (fill) fill.style.width = (g.pct * 100).toFixed(1) + '%';
   }
 
   /* ================= 航行按钮 ================= */
@@ -418,6 +444,22 @@
   }
   setInterval(drawMinimap, 180);
   window.__drawMinimap = drawMinimap;   // 调试钩子（节流环境下手动补绘）
+
+  /* 🗺️ 小地图图例（首次绘制一次，静态） */
+  (function buildMinimapLegend() {
+    const mm = document.getElementById('minimap');
+    if (!mm) return;
+    const lg = document.createElement('div');
+    lg.id = 'minimap-legend';
+    lg.innerHTML =
+      '<span class="lg-item"><span class="lg-dot" style="background:#ffd27f"></span>镜头</span>' +
+      '<span class="lg-item"><span class="lg-dot" style="background:#fff"></span>视线</span>' +
+      '<span class="lg-item"><span class="lg-dot" style="background:#e8b84a"></span>中国</span>' +
+      '<span class="lg-item"><span class="lg-dot" style="background:#7fb0e8"></span>希罗</span>' +
+      '<span class="lg-item"><span class="lg-dot" style="background:#6fd0a8"></span>伊斯兰</span>' +
+      '<span class="lg-item"><span class="lg-dot" style="background:#e89f6f"></span>印度</span>';
+    mm.appendChild(lg);
+  })();
   document.getElementById('minimap').addEventListener('pointerdown', function (e) {
     const mm = S.getMinimap();
     if (!mm) return;
@@ -1293,6 +1335,7 @@
       $('search-input').value = '';
       $('search-drop').classList.add('hidden');
       S.setMode(b.dataset.mode);
+      buildEraProgressBar();
       lastEraSpoken = -1;
       buildEraNav();
       buildLegend();
@@ -1853,6 +1896,7 @@
     syncButtons();
     updateExplored();
     drawRings();
+    buildEraProgressBar();
     renderFavs();
     setupTodayLantern();
     restorePrefs();
