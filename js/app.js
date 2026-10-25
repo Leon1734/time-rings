@@ -2049,6 +2049,95 @@
     updateExplored();
     drawRings();
     buildEraProgressBar();
+
+    /* 🎬 电影片头：星空 + 138亿年计数 + 品牌淡入（首次或重播） */
+    (function playIntro() {
+      const params = new URLSearchParams(location.search);
+      const isFirst = !localStorage.getItem('tr-onboard');
+      const replay = params.get('intro');
+      if (!isFirst && !replay) return;
+
+      const cv = document.getElementById('intro-canvas');
+      const ctx = cv.getContext('2d');
+      const counter = document.getElementById('intro-counter');
+      const unit = document.getElementById('intro-unit');
+      const brand = document.getElementById('intro-brand');
+      const sub = document.getElementById('intro-sub');
+      const screen = document.getElementById('loading-screen');
+      const skipBtn = document.getElementById('intro-skip');
+
+      /* 画布尺寸匹配 */
+      function fit() { cv.width = innerWidth; cv.height = innerHeight; }
+      fit(); window.addEventListener('resize', fit);
+
+      /* 星空生成 */
+      const stars = [];
+      for (let i = 0; i < 180; i++) {
+        stars.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.5 + 0.3, tw: Math.random() * Math.PI * 2, sp: 0.5 + Math.random() * 1.5 });
+      }
+
+      const t0 = performance.now();
+      const DUR = { fadeCounter: 500, count: 3000, pause: 800, brand: 1500, total: 6500 };
+      let done = false;
+
+      function fmt(n) {
+        if (n >= 1e8) return (n / 1e8).toFixed(1) + ' 亿';
+        if (n >= 1e4) return (n / 1e4).toFixed(0) + ' 万';
+        return String(Math.round(n));
+      }
+
+      function skip() {
+        if (done) return;
+        done = true;
+        screen.style.opacity = '0';
+        screen.style.transition = 'opacity .5s';
+        setTimeout(function () { screen.style.display = 'none'; }, 600);
+      }
+      window.__skipIntro = skip;
+      skipBtn.addEventListener('click', skip);
+
+      function frame(now) {
+        if (done) return;
+        const t = now - t0;
+
+        /* 星空 */
+        ctx.fillStyle = '#02040a';
+        ctx.fillRect(0, 0, cv.width, cv.height);
+        stars.forEach(function (st) {
+          const tw = 0.3 + 0.7 * Math.abs(Math.sin(t / 1000 * st.sp + st.tw));
+          ctx.fillStyle = 'rgba(200,215,255,' + tw * 0.6 + ')';
+          ctx.beginPath();
+          ctx.arc(st.x * cv.width, st.y * cv.height, st.r, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        /* 计数器 */
+        if (t > DUR.fadeCounter) {
+          counter.style.opacity = '1';
+          unit.style.opacity = '1';
+          const ct = Math.min(1, (t - DUR.fadeCounter) / DUR.count);
+          const ease = 1 - Math.pow(1 - ct, 3);  // easeOutCubic
+          const years = ease * 13.8e9;
+          counter.textContent = fmt(years);
+          unit.textContent = years >= 1e8 ? '年前' : '年';
+        }
+
+        /* 品牌 */
+        if (t > DUR.fadeCounter + DUR.count + DUR.pause) {
+          brand.style.opacity = '1';
+          brand.style.transform = 'translateY(0)';
+          sub.style.opacity = '0.8';
+        }
+
+        /* 结束 */
+        if (t > DUR.total) { skip(); return; }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      /* 强制结束兜底 */
+      setTimeout(skip, DUR.total + 1500);
+    })();
     renderFavs();
     setupTodayLantern();
     restorePrefs();
