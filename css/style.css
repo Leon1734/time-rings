@@ -832,3 +832,38 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
 }
 .achv-num { font-size: 10.5px; color: #77808f; margin-top: 4px; font-variant-numeric: tabular-nums; }
 .achv-done { position: absolute; top: 6px; right: 8px; font-size: 12px; }
+
+/* ================= 🎓 期末挑战（考试模式） ================= */
+#btn-quiz-exam {
+  border: 1px solid rgba(255,210,127,0.55);
+  color: var(--gold);
+  font-weight: 700;
+}
+#btn-quiz-exam:hover { background: rgba(255,210,127,0.12); }
+#exam-result {
+  position: absolute; inset: 0; z-index: 5;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 18px 20px; text-align: center;
+  background: linear-gradient(165deg, #10141f 96%, #171d2e);
+  border-radius: 16px;
+  animation: examPop .35s ease-out;
+}
+@keyframes examPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+#exam-grade { font-size: 54px; font-weight: 800; line-height: 1.15;
+  background: linear-gradient(120deg, #ffd27f, #ff9d5c);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: none; filter: drop-shadow(0 2px 14px rgba(255,180,80,0.35)); }
+#exam-score { font-size: 15px; color: #e8e2d4; font-variant-numeric: tabular-nums; }
+#exam-verdict { font-size: 13px; color: #9aa2b1; margin-bottom: 6px; }
+#exam-wrongs { font-size: 12px; color: #8b93a4; max-height: 108px; overflow-y: auto;
+  line-height: 2; max-width: 100%; }
+#exam-actions { display: flex; gap: 6px; margin-top: 10px; }
+#exam-actions button {
+  font-size: 12px; padding: 7px 10px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px; color: var(--text); transition: all .15s;
+}
+#exam-actions button:hover { border-color: var(--gold); color: var(--gold); }

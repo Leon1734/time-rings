@@ -14,7 +14,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="theme-color" content="#04060c">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="stylesheet" href="css/style.css?v=river41">
+  <link rel="stylesheet" href="css/style.css?v=river44">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>🏞️</text></svg>">
   <script type="application/ld+json">
   {
@@ -92,6 +92,18 @@
       <button id="btn-quiz-hint" aria-label="提示：飞往该河段">💡 提示</button>
       <button id="btn-quiz-wrong" aria-label="重练答错的题" title="重练答错的题">❗ 错题重练</button>
       <button id="btn-quiz-skip" aria-label="跳过这一题">⏭ 跳过</button>
+      <button id="btn-quiz-exam" aria-label="期末挑战：20 题固定卷" title="🎓 期末挑战：抽 20 题限时闭卷，按正确率评 S/A/B/C/D">🎓 期末挑战</button>
+    </div>
+    <div id="exam-result" class="hidden">
+      <div id="exam-grade">🏆 S</div>
+      <div id="exam-score">答对 20 / 20（100%）</div>
+      <div id="exam-verdict">满分！长河在你脚下</div>
+      <div id="exam-wrongs"></div>
+      <div id="exam-actions">
+        <button id="btn-exam-again" aria-label="再考一次">🔄 再考一次</button>
+        <button id="btn-exam-free" aria-label="回到自由练习">🎯 自由练习</button>
+        <button id="btn-exam-exit" aria-label="结束问答">✕ 结束</button>
+      </div>
     </div>
   </div>
 
@@ -326,10 +338,10 @@
 
   <script src="js/lib/three.min.js"></script>
   <script src="js/lib/OrbitControls.js"></script>
-  <script src="js/data.js?v=river41"></script>
-  <script src="js/textures.js?v=river41"></script>
-  <script src="js/scene.js?v=river41"></script>
-  <script src="js/app.js?v=river41"></script>
+  <script src="js/data.js?v=river44"></script>
+  <script src="js/textures.js?v=river44"></script>
+  <script src="js/scene.js?v=river44"></script>
+  <script src="js/app.js?v=river44"></script>
 <script>if(window.TRScene&&window.TRScene.isReady()){document.getElementById("loading-screen").style.opacity=0;document.getElementById("loading-screen").style.transition="opacity .6s";setTimeout(function(){document.getElementById("loading-screen").style.display="none"},700)}</script>
 <script>
 window.addEventListener('load', function () {

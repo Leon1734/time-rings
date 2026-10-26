@@ -291,10 +291,12 @@
   /* ================= 🏅 成就 2.0：五大维度 20 枚徽章 + 徽章墙 ================= */
   /* 行为统计（tr-stats）：问答 / 巡河 / 路线等跨会话累计 */
   let stats = { quizAnswered: 0, quizCorrect: 0, streakBest: 0, wrongCleared: 0,
-                dayToggled: 0, todayUsed: 0, tours: [], flyMax: 0 };
+                dayToggled: 0, todayUsed: 0, tours: [], flyMax: 0,
+                examCount: 0, examBest: 0, examEverS: 0 };
   try {
     const _s = JSON.parse(localStorage.getItem('tr-stats') || '{}');
-    ['quizAnswered', 'quizCorrect', 'streakBest', 'wrongCleared', 'dayToggled', 'todayUsed', 'flyMax']
+    ['quizAnswered', 'quizCorrect', 'streakBest', 'wrongCleared', 'dayToggled', 'todayUsed', 'flyMax',
+     'examCount', 'examBest', 'examEverS']
       .forEach(function (k) { if (typeof _s[k] === 'number') stats[k] = _s[k]; });
     if (Array.isArray(_s.tours)) stats.tours = _s.tours;
   } catch (e) {}
@@ -329,6 +331,8 @@
     { key: 'quiz-streak10', emoji: '⚡', name: '十连闪电',   sub: '问答连对 10 题',   cur: function () { return [stats.streakBest, 10]; } },
     { key: 'quiz-20',       emoji: '📚', name: '答满二十',   sub: '累计作答 20 题',   cur: function () { return [stats.quizAnswered, 20]; } },
     { key: 'quiz-clean',    emoji: '🧹', name: '错题清零',   sub: '把 3 道以上错题全部练会', cur: function () { return [stats.wrongCleared, 1]; } },
+    { key: 'exam-1',        emoji: '🎓', name: '初试锋芒',   sub: '完成一次期末挑战', cur: function () { return [Math.min(stats.examCount, 1), 1]; } },
+    { key: 'exam-s',        emoji: '🌟', name: '期末之星',   sub: '期末挑战获得 S 级（满分）', cur: function () { return [stats.examEverS, 1]; } },
     /* ⭐ 收藏 */
     { key: 'fav-1',  emoji: '⭐', name: '初次收藏', sub: '收藏 1 盏河灯',  cur: function () { return [Math.min(favs.length, 30), 1]; } },
     { key: 'fav-10', emoji: '🌟', name: '收藏家',   sub: '收藏 10 盏河灯', cur: function () { return [Math.min(favs.length, 30), 10]; } },
@@ -569,6 +573,8 @@
   let quizOn = false, quizPool = [], quizIdx = 0, quizTarget = null;
   let quizRound = 0, quizStreak = 0, quizHintUsed = false;
   let quizScope = 'all';                   // 'all' | 'cn' | 'grc' | 'isl' | 'ind' | 'world'
+  let quizMode = 'free';                   // 'free' 自由练习 | 'exam' 期末挑战
+  let examAnswers = [], examQuestions = [];// 考试：作答记录（布尔）+ 抽中的题目
   let quizRemain = 0, quizWrong = [], quizTimeoutArmed = false;
   try { quizWrong = JSON.parse(localStorage.getItem('tr-wrong') || '[]'); } catch (e) {}
   function shuffle(arr) {
@@ -593,6 +599,7 @@
   function startQuiz() {
     quizOn = true;
     window.__quizOn = true;
+    quizMode = 'free';
     quizTimeoutArmed = false;
     rebuildPool();
     quizRound = 0; quizStreak = 0;
@@ -603,14 +610,17 @@
   /* 调试出口：随时读取问答内部状态（也便于高阶用户排查） */
   window.__quizState = function () {
     return { on: quizOn, round: quizRound, streak: quizStreak,
-             wrong: quizWrong.length, scope: quizScope, target: quizTarget };
+             wrong: quizWrong.length, scope: quizScope, target: quizTarget,
+             mode: quizMode, examProgress: examAnswers.length + '/' + examQuestions.length };
   };
   function stopQuiz() {
     quizOn = false;
     window.__quizOn = false;
     quizTarget = null;
+    quizMode = 'free';
     S.setQuiz(null);
     $('quiz-card').classList.add('hidden');
+    $('exam-result').classList.add('hidden');
     $('btn-quiz').classList.remove('on');
     /* 📋 复盘：有答题记录时弹总结 */
     if (quizRound > 0) {
@@ -622,6 +632,85 @@
         (quizWrong.length ? ' · 错题 ' + quizWrong.length + ' 道待重练' : ' · 零错题！'));
     }
   }
+  /* ================= 🎓 期末挑战（固定 20 题闭卷） ================= */
+  function startExam() {
+    quizMode = 'exam';
+    quizOn = true;
+    window.__quizOn = true;
+    quizTimeoutArmed = false;
+    rebuildPool();
+    quizPool = shuffle(quizPool).slice(0, 20);   // 随机抽 20 题（池不足则全出）
+    examQuestions = quizPool.slice();
+    examAnswers = [];
+    quizRound = 0; quizStreak = 0;
+    if (S.state.flying) { S.toggleFly(); }
+    $('exam-result').classList.add('hidden');
+    $('btn-quiz').classList.add('on');
+    nextQuestion();
+    $('quiz-card').classList.remove('hidden');
+  }
+  /* 考试中停止接受作答（出成绩单时调用） */
+  function examHalt() {
+    quizOn = false;
+    window.__quizOn = false;
+    quizTarget = null;
+    quizRound = 0;                       // 防止 stopQuiz 的自由练习复盘重复弹出
+    S.setQuiz(null);
+    $('btn-quiz').classList.remove('on');
+  }
+  function recordExamAnswer(correct) {
+    examAnswers.push(correct);
+    quizRound++;
+  }
+  function showExamResult() {
+    examHalt();
+    const total = examAnswers.length;
+    const correct = examAnswers.filter(Boolean).length;
+    const rate = total ? Math.round(correct / total * 100) : 0;
+    let g, emoji, verdict;
+    if (rate === 100)     { g = 'S'; emoji = '🏆'; verdict = '满分！长河在你脚下'; }
+    else if (rate >= 90)  { g = 'A'; emoji = '🥇'; verdict = '出色！离炉火纯青只差一步'; }
+    else if (rate >= 70)  { g = 'B'; emoji = '🥈'; verdict = '稳健！扫一眼错题再战'; }
+    else if (rate >= 50)  { g = 'C'; emoji = '🥉'; verdict = '过半！错题重练再来'; }
+    else                  { g = 'D'; emoji = '💪'; verdict = '长河漫漫，游完再来挑战'; }
+    stats.examCount++;
+    if (rate > stats.examBest) stats.examBest = rate;
+    if (g === 'S') stats.examEverS = 1;
+    saveStats();
+    $('exam-grade').textContent = emoji + ' ' + g;
+    $('exam-score').textContent = '答对 ' + correct + ' / ' + total + '（' + rate + '%）' +
+      (stats.examBest > rate ? ' · 个人最佳 ' + stats.examBest + '%' : ' · 🎉 新纪录！');
+    $('exam-verdict').textContent = verdict;
+    const wrongs = examQuestions.filter(function (e, i) { return e && !examAnswers[i]; });
+    $('exam-wrongs').innerHTML = wrongs.length
+      ? '❗ 本次错题（点击直达）：<br>' + wrongs.map(function (e) {
+          return '<button class="chip link" data-goto="' + e.id + '">' + D.CATS[e.cat].icon + ' ' + esc(e.title) + '</button>';
+        }).join(' ')
+      : '✨ 零错题！';
+    $('exam-wrongs').querySelectorAll('[data-goto]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        $('exam-result').classList.add('hidden');
+        $('quiz-card').classList.add('hidden');
+        S.selectEvent(b.dataset.goto, true);
+        syncButtons();
+      });
+    });
+    $('exam-result').classList.remove('hidden');
+    $('quiz-card').classList.remove('hidden');
+    checkAchievements();
+    pluck(520, 0.14, 0.05); setTimeout(function () { pluck(660, 0.14, 0.05); }, 140);
+    setTimeout(function () { pluck(880, 0.18, 0.06); }, 280);
+  }
+  $('btn-quiz-exam').addEventListener('click', startExam);
+  $('btn-exam-again').addEventListener('click', startExam);
+  $('btn-exam-free').addEventListener('click', function () {
+    $('exam-result').classList.add('hidden');
+    startQuiz();
+  });
+  $('btn-exam-exit').addEventListener('click', function () {
+    $('exam-result').classList.add('hidden');
+    $('quiz-card').classList.add('hidden');
+  });
   function eraNameOf(ev) {
     const p = S.progressOf(ev.ago);
     const eras = D.ERAS[S.state.mode];
@@ -635,7 +724,9 @@
   function nextQuestion() {
     if (!quizOn) return;
     if (!quizPool.length) { stopQuiz(); return; }
-    if (quizIdx >= quizPool.length) { quizPool = shuffle(quizPool); quizIdx = 0; }
+    if (quizMode === 'exam') {
+      if (quizIdx >= quizPool.length) { showExamResult(); return; }   // 20 题答完 → 成绩单
+    } else if (quizIdx >= quizPool.length) { quizPool = shuffle(quizPool); quizIdx = 0; }
     quizRemain = 25;                        // 每题 25 秒（重置倒计时）
     quizTimeoutArmed = false;
     const ev = quizPool[quizIdx++];
@@ -655,12 +746,18 @@
     speak('请找到，' + ev.title + '。', true);
   }
   function updateQuizStats() {
+    if (quizMode === 'exam') {
+      $('quiz-stats').textContent = '🎓 期末挑战 · 第 ' + Math.min(quizRound + 1, examQuestions.length) +
+        ' / ' + examQuestions.length + ' 题 · 答对 ' + examAnswers.filter(Boolean).length;
+      return;
+    }
     $('quiz-stats').textContent = '✅ 连对 ' + quizStreak + ' · 已答 ' + quizRound + ' 题 · 🏆 最佳 ' + quizBest +
       (quizWrong.length ? ' · ❗ 错题 ' + quizWrong.length : '');
   }
   S.onQuiz(function (res) {
     if (!quizOn) return;
-    quizRound++;
+    if (quizMode === 'exam') recordExamAnswer(res.correct);
+    else quizRound++;
     const wrongBefore = quizWrong.length;
     stats.quizAnswered++;
     if (res.correct) {
@@ -710,6 +807,8 @@
       document.querySelectorAll('#quiz-scope button').forEach(function (x) { x.classList.remove('on'); });
       b.classList.add('on');
       quizScope = b.dataset.scope;
+      quizMode = 'free';                                   // 切换范围 = 放弃考试，回到自由练习
+      $('exam-result').classList.add('hidden');
       if (!quizOn) { quizOn = true; window.__quizOn = true; $('quiz-card').classList.remove('hidden'); }
       quizRound = 0; quizStreak = 0;
       rebuildPool();
@@ -720,6 +819,12 @@
 
   /* ❗ 错题重练：只出答错过的题 */
   $('btn-quiz-wrong').addEventListener('click', function () {
+    if (quizMode === 'exam') {
+      const fb = $('quiz-feedback');
+      fb.textContent = '🎓 期末挑战进行中，考完再重练错题';
+      fb.className = 'ok';
+      return;
+    }
     if (!quizOn || !quizWrong.length) {
       const fb = $('quiz-feedback');
       fb.textContent = '暂无错题记录，继续加油！';
@@ -751,7 +856,8 @@
     quizStreak = 0;
     S.setQuiz(null);          // 跳过：直接揭示答案
     S.selectEvent(t.id, true);
-    quizRound++;
+    if (quizMode === 'exam') recordExamAnswer(false);   // 考试跳过按答错计
+    else quizRound++;
     updateQuizStats();
     $('quiz-feedback').textContent = '💡 答案已飞达，记住它的位置';
     $('quiz-feedback').className = 'bad';
@@ -1535,6 +1641,7 @@
   let quizLastTick = 0;
   setInterval(function () {
     if (!quizOn || !quizTarget) { quizLastTick = 0; return; }
+    if (!quizOn) { quizLastTick = 0; return; }   // 非答题状态不倒计时（防退出后 quizTarget 为 null 时超时分支崩溃）
     if (S.state.paused) { quizLastTick = 0; return; }
     const nowT = Date.now();
     const delta = quizLastTick ? Math.min(1, (nowT - quizLastTick) / 1000) : 0;
@@ -1545,6 +1652,8 @@
     if (quizRemain <= 0 && !quizTimeoutArmed) {
       quizTimeoutArmed = true;              // 防止重复判超时（重置连对）
       quizRemain = 0;
+      quizStreak = 0;
+      if (quizMode === 'exam' && quizTarget) recordExamAnswer(false);   // 考试超时按答错计
       const fb = document.getElementById('quiz-feedback');
       if (fb) {
         fb.textContent = '⏰ 超时！正确答案是「' + quizTarget.title + '」';
