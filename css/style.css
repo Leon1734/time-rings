@@ -867,3 +867,6 @@ table.cal td:first-child { color: #aecbff; width: 42%; font-variant-numeric: tab
   border-radius: 8px; color: var(--text); transition: all .15s;
 }
 #exam-actions button:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ================= 🔥 连续巡河打卡 ================= */
+#streak-line { font-size: 12px; color: #ffb27f; margin: 5px 0 2px; letter-spacing: 0.5px; }

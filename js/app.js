@@ -292,17 +292,42 @@
   /* 行为统计（tr-stats）：问答 / 巡河 / 路线等跨会话累计 */
   let stats = { quizAnswered: 0, quizCorrect: 0, streakBest: 0, wrongCleared: 0,
                 dayToggled: 0, todayUsed: 0, tours: [], flyMax: 0,
-                examCount: 0, examBest: 0, examEverS: 0 };
+                examCount: 0, examBest: 0, examEverS: 0, streakDays: 0, lastDay: 0 };
   try {
     const _s = JSON.parse(localStorage.getItem('tr-stats') || '{}');
     ['quizAnswered', 'quizCorrect', 'streakBest', 'wrongCleared', 'dayToggled', 'todayUsed', 'flyMax',
-     'examCount', 'examBest', 'examEverS']
+     'examCount', 'examBest', 'examEverS', 'streakDays', 'lastDay']
       .forEach(function (k) { if (typeof _s[k] === 'number') stats[k] = _s[k]; });
     if (Array.isArray(_s.tours)) stats.tours = _s.tours;
   } catch (e) {}
   function saveStats() {
     try { localStorage.setItem('tr-stats', JSON.stringify(stats)); } catch (e) {}
   }
+  /* 🔥 连续巡河打卡：每天首次打开 +1，隔天断签归 1 */
+  function updateStreak() {
+    const dayKey = function (d) {
+      return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+    };
+    const now = new Date();
+    const today = dayKey(now);
+    const yesterday = dayKey(new Date(now.getTime() - 86400000));
+    if (stats.lastDay === today) {
+      /* 今天已打过卡 */
+    } else if (stats.lastDay === yesterday) {
+      stats.streakDays = (stats.streakDays || 0) + 1;
+    } else {
+      stats.streakDays = 1;
+    }
+    stats.lastDay = today;
+    saveStats();
+    const el = document.getElementById('streak-line');
+    if (el) {
+      el.textContent = '🔥 连续巡河 ' + stats.streakDays + ' 天' +
+        (stats.streakDays >= 3 ? ' · 灯火不熄' : '');
+      el.classList.remove('hidden');
+    }
+  }
+  updateStreak();
 
   let achvShown = {};
   try { achvShown = JSON.parse(localStorage.getItem('tr-achv') || '{}'); } catch (e) {}
@@ -1921,6 +1946,9 @@
     ctx.fillStyle = '#8b93a4'; ctx.font = '20px "Microsoft YaHei"';
     const d = new Date();
     ctx.fillText(d.getFullYear() + ' 年 ' + (d.getMonth() + 1) + ' 月 ' + d.getDate() + ' 日', 62, 126);
+    ctx.fillStyle = '#ffb27f';
+    ctx.fillText('🔥 连续巡河 ' + Math.max(1, stats.streakDays || 1) + ' 天 · 累计答对 ' + (stats.quizCorrect || 0) + ' 题 · 徽章 ' +
+      BADGES.filter(function (b) { return achvShown[b.key]; }).length + ' / ' + BADGES.length, 62, 160);
 
     /* 总进度大数字 */
     ctx.fillStyle = '#e8e2d4'; ctx.font = '700 30px "Microsoft YaHei"';
