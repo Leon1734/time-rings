@@ -1379,6 +1379,7 @@
     const ev = eventById(id);
     if (!ev) return;
     const near = nearbyEvents(ev);
+    const rel = relatedEvents(ev);
     $('panel-body').innerHTML =
       heroHtml(D.CATS[ev.cat].color, D.CAT_EMOJI[ev.cat] || '📜') +
       '<div class="tags">' + catChip(ev.cat) +
@@ -1392,13 +1393,17 @@
         '<button class="chip link" id="btn-compare">⇄ 与另一盏河灯对比</button>' +
       '</div>' +
       '<div class="cosmic" title="把宇宙138亿年压缩成一年，该事件发生的时刻">🌌 宇宙日历：<b>' + D.cosmicDate(ev.ago) + '</b></div>' +
-      '<div class="near"><button class="chip link" id="btn-compare">⇄ 与另一盏河灯对比</button></div>' +
       '<p class="desc">' + esc(ev.desc) + '</p>' +
       '<ul class="facts">' + ev.facts.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>' +
       chainHtml(ev) +
       birthAfterHtml(ev) +
       (near.length ? '<h3>⏳ 同时代的星空</h3><div class="near">' +
         near.map(function (e2) {
+          return '<button class="chip link" data-goto="' + e2.id + '">' +
+            esc(e2.title) + ' <i>' + D.fmtAgo(e2.ago) + '</i></button>';
+        }).join('') + '</div>' : '') +
+      (rel.length ? '<h3>🔗 同类之光 · ' + esc(D.CATS[ev.cat].name) + '的跨越</h3><div class="near">' +
+        rel.map(function (e2) {
           return '<button class="chip link" data-goto="' + e2.id + '">' +
             esc(e2.title) + ' <i>' + D.fmtAgo(e2.ago) + '</i></button>';
         }).join('') + '</div>' : '');
@@ -1439,6 +1444,19 @@
       .sort(function (a, b) { return a.d - b.d || b.e.imp - a.e.imp; })
       .slice(0, 6)
       .map(function (x) { return x.e; });
+  }
+  /* "同类之光"：同类别跨时代推荐（主题串联，如 望远镜→天眼），排除同时代已出现的灯 */
+  function relatedEvents(ev) {
+    const nearIds = nearbyEvents(ev).map(function (e) { return e.id; });
+    let pool = S.eventsInMode()
+      .filter(function (e) { return e.id !== ev.id && e.cat === ev.cat && nearIds.indexOf(e.id) < 0; });
+    if (pool.length > 3) {
+      const bright = pool.filter(function (e) { return e.imp >= 2; });
+      if (bright.length >= 3) pool = bright;
+    }
+    return pool
+      .sort(function (a, b) { return (b.imp - a.imp) || (Math.abs(S.progressOf(b.ago) - S.progressOf(ev.ago)) - Math.abs(S.progressOf(a.ago) - S.progressOf(ev.ago))); })
+      .slice(0, 3);
   }
 
   /* ---- 📖 纪元探索器（增强纪元面板） ---- */
