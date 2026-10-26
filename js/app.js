@@ -288,27 +288,80 @@
   let explored = {};
   try { explored = JSON.parse(localStorage.getItem('tr-explored') || '{}'); } catch (e) {}
   let exploredN = Object.keys(explored).length;
-  const ACHV = [
-    [10, '🌱', '初涉长河'],
-    [25, '🕯️', '灯火渐明'],
-    [50, '🔥', '星火燎原'],
-    [100, '💯', '百灯之约'],
-    [200, '⛵', '半程巡礼'],
-    [400, '🎓', '长河拾遗大家'],
-    [551, '🏆', '燃尽长河 · 全图鉴']
-  ];
+  /* ================= 🏅 成就 2.0：五大维度 20 枚徽章 + 徽章墙 ================= */
+  /* 行为统计（tr-stats）：问答 / 巡河 / 路线等跨会话累计 */
+  let stats = { quizAnswered: 0, quizCorrect: 0, streakBest: 0, wrongCleared: 0,
+                dayToggled: 0, todayUsed: 0, tours: [], flyMax: 0 };
+  try {
+    const _s = JSON.parse(localStorage.getItem('tr-stats') || '{}');
+    ['quizAnswered', 'quizCorrect', 'streakBest', 'wrongCleared', 'dayToggled', 'todayUsed', 'flyMax']
+      .forEach(function (k) { if (typeof _s[k] === 'number') stats[k] = _s[k]; });
+    if (Array.isArray(_s.tours)) stats.tours = _s.tours;
+  } catch (e) {}
+  function saveStats() {
+    try { localStorage.setItem('tr-stats', JSON.stringify(stats)); } catch (e) {}
+  }
+
   let achvShown = {};
   try { achvShown = JSON.parse(localStorage.getItem('tr-achv') || '{}'); } catch (e) {}
+  /* 旧版数字键迁移：{10:1} → {explore-10:1}，避免老用户重复解锁 */
+  (function migrateAchv() {
+    const oldKeys = ['10', '25', '50', '100', '200', '400', '551'];
+    let changed = false;
+    oldKeys.forEach(function (k) {
+      if (achvShown[k]) { achvShown['explore-' + k] = 1; delete achvShown[k]; changed = true; }
+    });
+    if (changed) { try { localStorage.setItem('tr-achv', JSON.stringify(achvShown)); } catch (e) {} }
+  })();
+
+  const BADGES = [
+    /* 🧭 探索 */
+    { key: 'explore-10',  emoji: '🌱', name: '初涉长河',     sub: '探索 10 个事件',   cur: function () { return [exploredN, 10]; } },
+    { key: 'explore-25',  emoji: '🕯️', name: '灯火渐明',     sub: '探索 25 个事件',   cur: function () { return [exploredN, 25]; } },
+    { key: 'explore-50',  emoji: '🔥', name: '星火燎原',     sub: '探索 50 个事件',   cur: function () { return [exploredN, 50]; } },
+    { key: 'explore-100', emoji: '💯', name: '百灯之约',     sub: '探索 100 个事件',  cur: function () { return [exploredN, 100]; } },
+    { key: 'explore-200', emoji: '⛵', name: '半程巡礼',     sub: '探索 200 个事件',  cur: function () { return [exploredN, 200]; } },
+    { key: 'explore-400', emoji: '🎓', name: '长河拾遗大家', sub: '探索 400 个事件',  cur: function () { return [exploredN, 400]; } },
+    { key: 'explore-all', emoji: '🏆', name: '燃尽长河',     sub: '探索全部事件',     cur: function () { return [exploredN, D.EVENTS.length]; } },
+    /* 🏆 问答 */
+    { key: 'quiz-first',  emoji: '🎯', name: '首答告捷',     sub: '问答首次答对',     cur: function () { return [Math.min(stats.quizCorrect, 1), 1]; } },
+    { key: 'quiz-streak5',  emoji: '🔥', name: '五连星',     sub: '问答连对 5 题',    cur: function () { return [stats.streakBest, 5]; } },
+    { key: 'quiz-streak10', emoji: '⚡', name: '十连闪电',   sub: '问答连对 10 题',   cur: function () { return [stats.streakBest, 10]; } },
+    { key: 'quiz-20',       emoji: '📚', name: '答满二十',   sub: '累计作答 20 题',   cur: function () { return [stats.quizAnswered, 20]; } },
+    { key: 'quiz-clean',    emoji: '🧹', name: '错题清零',   sub: '把 3 道以上错题全部练会', cur: function () { return [stats.wrongCleared, 1]; } },
+    /* ⭐ 收藏 */
+    { key: 'fav-1',  emoji: '⭐', name: '初次收藏', sub: '收藏 1 盏河灯',  cur: function () { return [Math.min(favs.length, 30), 1]; } },
+    { key: 'fav-10', emoji: '🌟', name: '收藏家',   sub: '收藏 10 盏河灯', cur: function () { return [Math.min(favs.length, 30), 10]; } },
+    { key: 'fav-30', emoji: '💫', name: '收藏大家', sub: '收藏 30 盏河灯', cur: function () { return [favs.length, 30]; } },
+    /* 🏞️ 巡河 */
+    { key: 'river-end', emoji: '🏁', name: '抵达入海口', sub: '沿河抵达入海口', cur: function () { return [stats.flyMax >= 0.995 ? 1 : 0, 1]; } },
+    { key: 'day-night', emoji: '🌗', name: '昼夜行者',   sub: '切换一次昼 / 夜',  cur: function () { return [stats.dayToggled, 1]; } },
+    { key: 'today',     emoji: '🌙', name: '今日之灯',   sub: '点亮一次每日推荐', cur: function () { return [stats.todayUsed, 1]; } },
+    /* 🗺️ 路线 */
+    { key: 'tour-1',   emoji: '🗺️', name: '循线而游', sub: '走完 1 条教学路线', cur: function () { return [stats.tours.length, 1]; } },
+    { key: 'tour-all', emoji: '🧭', name: '六线全通', sub: '走完全部教学路线',  cur: function () { return [stats.tours.length, D.TOURS.length]; } }
+  ];
+
+  let achvQueue = [], achvBusy = false, achvTimer = null;
   function checkAchievements() {
-    ACHV.forEach(function (a) {
-      if (exploredN >= a[0] && !achvShown[a[0]]) {
-        achvShown[a[0]] = 1;
+    BADGES.forEach(function (b) {
+      if (achvShown[b.key]) return;
+      const c = b.cur();
+      if (c[0] >= c[1]) {
+        achvShown[b.key] = 1;
         try { localStorage.setItem('tr-achv', JSON.stringify(achvShown)); } catch (e) {}
-        showAchievement(a[1], a[2], '已探索 ' + a[0] + ' 个事件');
+        achvQueue.push(b);
       }
     });
+    if (!achvBusy) nextAchvToast();
   }
-  let achvTimer = null;
+  function nextAchvToast() {
+    const b = achvQueue.shift();
+    if (!b) { achvBusy = false; return; }
+    achvBusy = true;
+    showAchievement(b.emoji, b.name, b.sub);
+    setTimeout(nextAchvToast, 4400);   // 错开连击解锁，toast 逐条展示
+  }
   function showAchievement(emoji, title, sub) {
     $('achv-emoji').textContent = emoji;
     $('achv-title').textContent = '成就解锁 · ' + title;
@@ -320,6 +373,41 @@
     if (achvTimer) clearTimeout(achvTimer);
     achvTimer = setTimeout(function () { t.classList.add('hidden'); }, 4200);
   }
+  /* 徽章墙渲染（打开弹窗时刷新） */
+  function renderAchvWall() {
+    const grid = document.getElementById('achv-grid');
+    if (!grid) return;
+    let unlockedN = 0;
+    grid.innerHTML = BADGES.map(function (b) {
+      const c = b.cur();
+      const done = c[0] >= c[1] || achvShown[b.key];
+      if (done) unlockedN++;
+      const pct = Math.min(100, Math.round(c[0] / c[1] * 100));
+      return '<div class="achv-cell ' + (done ? 'unlocked' : 'locked') + '" title="' + esc(b.name) + '：' + esc(b.sub) + '">' +
+        (done ? '<span class="achv-done">✨</span>' : '') +
+        '<div class="achv-emoji">' + b.emoji + '</div>' +
+        '<div class="achv-name">' + b.name + '</div>' +
+        '<div class="achv-sub">' + b.sub + '</div>' +
+        '<div class="achv-bar"><i style="width:' + (done ? 100 : pct) + '%"></i></div>' +
+        '<div class="achv-num">' + (done ? '已解锁' : Math.min(c[0], c[1]) + ' / ' + c[1]) + '</div>' +
+        '</div>';
+    }).join('');
+    const cnt = document.getElementById('achv-count');
+    if (cnt) cnt.textContent = '已解锁 ' + unlockedN + ' / ' + BADGES.length +
+      ' · 继续沿河探索、答题、收藏、走路线，点亮全部徽章';
+  }
+  document.getElementById('btn-achv').addEventListener('click', renderAchvWall);
+  /* 巡河里程统计：每 2.5s 采样一次飞览进度（入海口徽章用）。
+     隐藏页无需守卫——rAF 停摆时 flyP 不会前进，采样自然为空转 */
+  setInterval(function () {
+    if (!S || !S.state) return;
+    const fp = S.state.flyP || 0;
+    if (fp > stats.flyMax) {
+      stats.flyMax = fp;
+      if (fp >= 0.995 || fp - (stats.flySaved || 0) > 0.05) { stats.flySaved = fp; saveStats(); }
+      checkAchievements();
+    }
+  }, 2500);
   function markExplored(id) {
     if (explored[id]) return false;
     explored[id] = 1;
@@ -391,6 +479,12 @@
     S.selectEvent(ev.id, true);
     speak('第' + (tourIdx + 1) + '站，' + ev.title + '。' + firstSentence(ev.desc), true);
     if (tourAuto && tourIdx >= tour.steps.length - 1) stopTourAuto();   // 末站停自动
+    /* 走到末站 → 记录完成路线（「循线而游」「六线全通」徽章） */
+    if (tourIdx >= tour.steps.length - 1 && stats.tours.indexOf(tour.id) < 0) {
+      stats.tours.push(tour.id);
+      saveStats();
+      checkAchievements();
+    }
   }
   function stopTourAuto() {
     if (tourAuto) { clearInterval(tourAuto); tourAuto = null; }
@@ -567,12 +661,18 @@
   S.onQuiz(function (res) {
     if (!quizOn) return;
     quizRound++;
+    const wrongBefore = quizWrong.length;
+    stats.quizAnswered++;
     if (res.correct) {
       quizStreak++;
+      stats.quizCorrect++;
+      if (quizStreak > stats.streakBest) stats.streakBest = quizStreak;
       if (quizWrong.indexOf(res.id) >= 0) {
         quizWrong = quizWrong.filter(function (id) { return id !== res.id; });
         try { localStorage.setItem('tr-wrong', JSON.stringify(quizWrong)); } catch (e) {}
       }
+      /* 错题本曾有 3 道以上，本次答对后全部清零 → 「错题清零」徽章 */
+      if (wrongBefore >= 3 && quizWrong.length === 0) stats.wrongCleared = 1;
       if (quizStreak > quizBest) { quizBest = quizStreak; savePrefs(); }
       $('quiz-feedback').textContent = '🎉 答对了！';
       $('quiz-feedback').className = 'ok';
@@ -590,7 +690,9 @@
       pluck(200, 0.25, 0.05);
       speak('不对哦，再找找。', true);
     }
+    saveStats();
     updateQuizStats();
+    checkAchievements();
     setTimeout(function () { if (quizOn) nextQuestion(); }, res.correct ? 1400 : 1800);
   });
   $('btn-quiz').addEventListener('click', function () {
@@ -916,6 +1018,7 @@
     const day = S.toggleDay();
     this.classList.toggle('on', day);
     this.textContent = day ? '☀️ 白天' : '🌙 星夜';
+    if (!stats.dayToggled) { stats.dayToggled = 1; saveStats(); checkAchievements(); }
     savePrefs();
   });
   /* ================= 进度条拖动跳转（像视频一样） ================= */
@@ -1616,6 +1719,7 @@
     btn.classList.remove('hidden');
     btn.addEventListener('click', function () {
       pluck(720, 0.1, 0.04);
+      if (!stats.todayUsed) { stats.todayUsed = 1; saveStats(); checkAchievements(); }
       S.selectEvent(ev.id, true);
       syncButtons();
     });
@@ -1791,6 +1895,7 @@
     if (i >= 0) favs.splice(i, 1); else favs.push(id);
     saveFavs();
     renderFavs();
+    checkAchievements();   // 收藏类徽章
   }
   function renderFavs() {
     const box = $('fav-list');
@@ -1925,6 +2030,7 @@
         wrong: JSON.parse(localStorage.getItem('tr-wrong') || '[]'),
         favs: JSON.parse(localStorage.getItem('tr-favs') || '[]'),
         prefs: JSON.parse(localStorage.getItem('tr-prefs-v1') || '{}'),
+        stats: JSON.parse(localStorage.getItem('tr-stats') || '{}'),
         birth: localStorage.getItem('tr-birth') || null
       };
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1951,9 +2057,9 @@
       try {
         const data = JSON.parse(reader.result);
         if (!data.v || !data.explored) throw new Error('不是有效的进度备份文件');
-        ['explored', 'achv', 'wrong', 'favs', 'prefs'].forEach(function (key) {
+        ['explored', 'achv', 'wrong', 'favs', 'prefs', 'stats'].forEach(function (key) {
           if (data[key]) {
-            const storeKey = { explored: 'tr-explored', achv: 'tr-achv', wrong: 'tr-wrong', favs: 'tr-favs', prefs: 'tr-prefs-v1' }[key];
+            const storeKey = { explored: 'tr-explored', achv: 'tr-achv', wrong: 'tr-wrong', favs: 'tr-favs', prefs: 'tr-prefs-v1', stats: 'tr-stats' }[key];
             localStorage.setItem(storeKey, JSON.stringify(data[key]));
           }
         });

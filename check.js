@@ -93,10 +93,14 @@ try {
     'tour-title', 'tour-stepnum', 'atlas-list', 'atlas-search',
     'science-vs-table', 'science-quotes', 'science-faq', 'science-cal-table',
     'science-cal-note', 'science-cal-foot', 'help-list',
-    'btn-compare', 'btn-compare-exit', 'btn-compare-cancel', 'btn-fav'
+    'btn-compare', 'btn-compare-exit', 'btn-compare-cancel', 'btn-fav',
+    'btn-era-fly'
   ]);
 
-  const refs = [...new Set([...allJs.matchAll(/\$\('([\w-]+)'\)/g)].map(m => m[1]))];
+  const refs = [...new Set([
+    ...allJs.matchAll(/\$\('([\w-]+)'\)/g),
+    ...allJs.matchAll(/getElementById\('([\w-]+)'\)/g)
+  ].map(m => m[1]))];
   const missing = refs.filter(id => {
     if (dynamicIds.has(id)) return false;
     return !html.includes('id="' + id + '"');

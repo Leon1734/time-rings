@@ -6,7 +6,7 @@
  * ============================================================ */
 'use strict';
 
-const SW_VERSION = 'v36';
+const SW_VERSION = 'v37';
 const CACHE_NAME = 'tr-cache-' + SW_VERSION;
 const SHELL = [
   './',
