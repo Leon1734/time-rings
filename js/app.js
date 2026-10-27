@@ -675,6 +675,7 @@
     $('quiz-card').classList.remove('hidden');
   }
   /* 考试中停止接受作答（出成绩单时调用） */
+  let lastExam = null;                   // 最近一次成绩（分享卡片用）
   function examHalt() {
     quizOn = false;
     window.__quizOn = false;
@@ -702,6 +703,8 @@
     if (rate > stats.examBest) stats.examBest = rate;
     if (g === 'S') stats.examEverS = 1;
     saveStats();
+    lastExam = { grade: g, emoji: emoji, correct: correct, total: total, rate: rate, verdict: verdict,
+                 isNewBest: stats.examBest <= rate, date: new Date() };
     $('exam-grade').textContent = emoji + ' ' + g;
     $('exam-score').textContent = '答对 ' + correct + ' / ' + total + '（' + rate + '%）' +
       (stats.examBest > rate ? ' · 个人最佳 ' + stats.examBest + '%' : ' · 🎉 新纪录！');
@@ -736,6 +739,79 @@
     $('exam-result').classList.add('hidden');
     $('quiz-card').classList.add('hidden');
   });
+  /* 🏆 成绩分享卡片：复用分享弹窗画布（保存按钮通用） */
+  $('btn-exam-share').addEventListener('click', function () {
+    if (!lastExam) return;
+    drawExamCard(lastExam);
+    $('modal-sharecard').classList.remove('hidden');
+  });
+  function drawExamCard(ex) {
+    const cv = document.getElementById('share-canvas');
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+
+    /* 背景：深空渐变 + 星尘 */
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#060a18'); bg.addColorStop(0.5, '#0a1020'); bg.addColorStop(1, '#04060c');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 200; i++) {
+      ctx.fillStyle = 'rgba(200,215,255,' + (0.04 + (i % 7) * 0.03) + ')';
+      ctx.fillRect((i * 137) % W, (i * 71) % H, 2, 2);
+    }
+
+    /* 蜿蜒河流剪影 + 河灯微光 */
+    ctx.beginPath();
+    ctx.moveTo(80, 760);
+    ctx.bezierCurveTo(250, 690, 350, 830, 500, 790);
+    ctx.bezierCurveTo(650, 750, 750, 870, 920, 830);
+    ctx.strokeStyle = 'rgba(30,90,110,0.5)'; ctx.lineWidth = 50; ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(60,150,170,0.3)'; ctx.lineWidth = 25;
+    ctx.stroke();
+    [[200, 725], [350, 765], [500, 788], [650, 770], [800, 825]].forEach(function (lp) {
+      const grad = ctx.createRadialGradient(lp[0], lp[1], 0, lp[0], lp[1], 35);
+      grad.addColorStop(0, 'rgba(255,210,127,0.7)');
+      grad.addColorStop(1, 'rgba(255,210,127,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(lp[0], lp[1], 35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff8e0';
+      ctx.beginPath(); ctx.arc(lp[0], lp[1], 5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    /* 品牌抬头 */
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffd27f';
+    ctx.font = '700 64px "Microsoft YaHei", sans-serif';
+    ctx.fillText('🎓 期末挑战 · 滚滚长河', W / 2, 170);
+    ctx.fillStyle = '#8b93a4';
+    ctx.font = '300 26px "Microsoft YaHei", sans-serif';
+    ctx.fillText(ex.date.getFullYear() + '.' + (ex.date.getMonth() + 1) + '.' + ex.date.getDate() + ' · 20 题限时闭卷', W / 2, 216);
+
+    /* 中央大评级（金色渐变大字） */
+    const gold = ctx.createLinearGradient(W / 2 - 180, 330, W / 2 + 180, 560);
+    gold.addColorStop(0, '#ffe9b8'); gold.addColorStop(1, '#ff9d5c');
+    ctx.fillStyle = gold;
+    ctx.font = '700 300px "Microsoft YaHei", sans-serif';
+    ctx.fillText(ex.grade, W / 2, 545);
+
+    /* 得分与评语 */
+    ctx.fillStyle = '#e8e2d4';
+    ctx.font = '700 44px "Microsoft YaHei", sans-serif';
+    ctx.fillText('答对 ' + ex.correct + ' / ' + ex.total + '（' + ex.rate + '%）' + (ex.isNewBest ? ' · 🎉 新纪录' : ''), W / 2, 640);
+    ctx.fillStyle = '#9aa2b1';
+    ctx.font = '300 32px "Microsoft YaHei", sans-serif';
+    ctx.fillText(ex.emoji + ' ' + ex.verdict, W / 2, 700);
+
+    /* 底部统计行 */
+    const badgeN = BADGES.filter(function (b) { return achvShown[b.key]; }).length;
+    ctx.fillStyle = '#77808f';
+    ctx.font = '26px "Microsoft YaHei", sans-serif';
+    ctx.fillText('🔥 连续巡河 ' + Math.max(1, stats.streakDays || 1) + ' 天 · 🏅 徽章 ' + badgeN + ' / ' + BADGES.length +
+      ' · ⭐ 收藏 ' + favs.length, W / 2, 910);
+    ctx.fillStyle = '#5b6474';
+    ctx.font = '22px "Microsoft YaHei", sans-serif';
+    ctx.fillText('leon1734.github.io/time-rings', W / 2, 980);
+  }
   function eraNameOf(ev) {
     const p = S.progressOf(ev.ago);
     const eras = D.ERAS[S.state.mode];
